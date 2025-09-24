@@ -1,0 +1,122 @@
+---
+Title: "Supporting: Battlestation Entity"
+slug: domain/entities/supporting/battlestation
+summary: Hardware / logical interaction terminal enabling authenticated play, transactions, and capability execution within an Academy or Store context.
+status: experimental
+lastUpdated: 2025-09-24
+stability: experimental
+tags: [supporting-entity, infrastructure, terminal]
+---
+
+# Battlestation (Supporting Entity)
+
+## 1. Canonical Definition
+
+A **Battlestation** is an operational terminal (physical or virtual) registered under an Academy (optionally attached to a Store) that mediates secure interactive sessions (matches, pack openings, training) and localized capability enforcement (rulesets, entitlements).
+
+## 2. Primary Responsibilities
+
+| Responsibility       | Description                                                                |
+| -------------------- | -------------------------------------------------------------------------- |
+| Session Mediation    | Hosts authenticated interactive sessions and enforces runtime constraints. |
+| Capability Filtering | Applies effective ruleset + entitlement profile to requests.               |
+| Commerce Integration | (Optional) Enables pack opening, inventory browsing, micro-purchases.      |
+| Telemetry & Health   | Emits heartbeat, capability flags, latency + error signals.                |
+| Policy Resolution    | Resolves rule precedence (inline > store > academy > global).              |
+
+## 3. Identity & Referencing
+
+| Aspect            | Rule                                                 |
+| ----------------- | ---------------------------------------------------- |
+| Global Identifier | `battleStationId` (UUID).                            |
+| Station Key       | Immutable secret-scoped identifier for auth pairing. |
+| Status            | `ACTIVE`, `DISABLED`, `MAINTENANCE`.                 |
+| Ownership Scope   | Must link to an Academy; Store optional.             |
+
+## 4. Core Attribute Model
+
+| Field                  | Type                   | Notes                                          |
+| ---------------------- | ---------------------- | ---------------------------------------------- |
+| battleStationId        | ID                     | Primary key.                                   |
+| academyId              | ID(Academy)            | Required.                                      |
+| storeId                | ID(Store)              | Nullable.                                      |
+| stationCode            | string                 | Human friendly short code.                     |
+| stationKey             | string                 | Secret/rotatable (never exposed in read APIs). |
+| status                 | enum                   | Operational state.                             |
+| systemManaged          | boolean                | If provisioned by platform infra.              |
+| description            | string                 | Optional.                                      |
+| locationHint           | string                 | Room / zone metadata.                          |
+| capabilities           | `array<string>`        | Feature flags (PACK_OPEN, MATCH_HOST, etc.).   |
+| entitlementProfileId   | ID(EntitlementProfile) | Nullable.                                      |
+| ruleSetId              | ID(RuleSet)            | Nullable explicit assignment.                  |
+| effectiveRuleSetId     | ID(RuleSet)            | Computed after precedence resolution.          |
+| effectiveRuleSetSource | enum                   | `INLINE`, `ACADEMY`, `STORE`, `GLOBAL`.        |
+| supportedTenderIds     | `array<string>`        | Payment mediums allowed.                       |
+| allowOfflineQueue      | boolean                | Queue operations offline for later sync.       |
+| lastHeartbeatAt        | timestamp              | Health indicator.                              |
+| createdAt              | timestamp              | Creation time.                                 |
+| updatedAt              | timestamp              | Last modification.                             |
+
+## 5. Relationship Topology
+
+| Related Entity     | Nature                    |
+| ------------------ | ------------------------- |
+| Academy            | Parent scope              |
+| Store              | Optional commerce scope   |
+| RuleSet            | Policy attachment         |
+| EntitlementProfile | Capability gating         |
+| PackOpening        | Session events executed   |
+| InventoryItem      | Read-only listing surface |
+
+## 6. Lifecycle & Status Rules
+
+- `DISABLED`: Cannot initiate new sessions.
+- `MAINTENANCE`: Session start blocked; diagnostics allowed.
+- Heartbeat gap > threshold -> soft degrade / warning.
+
+## 7. Invariants & Constraints
+
+| Constraint                                       | Reason                  |
+| ------------------------------------------------ | ----------------------- |
+| stationKey uniqueness                            | Secure addressing       |
+| Effective ruleset must resolve deterministically | Policy clarity          |
+| Heartbeat stale threshold triggers alert         | Operational reliability |
+
+## 8. Domain Events
+
+| Event                          | Trigger                      |
+| ------------------------------ | ---------------------------- |
+| BattlestationRegistered        | Create                       |
+| BattlestationStatusChanged     | status mutation              |
+| BattlestationHeartbeatReceived | heartbeat ingest             |
+| BattlestationPolicyResolved    | change in effectiveRuleSetId |
+
+## 9. API Surface (Representative)
+
+```
+POST   /battlestations
+GET    /battlestations/{battleStationId}
+GET    /battlestations?academyId=...&status=...
+PATCH  /battlestations/{battleStationId}
+POST   /battlestations/{battleStationId}/rotate-key
+POST   /battlestations/{battleStationId}/disable
+POST   /battlestations/{battleStationId}/maintenance
+```
+
+## 10. Observability
+
+- Heartbeat latency export (ms since last seen).
+- Capability mismatch anomalies (declared vs effective rule set).
+- Error rate per session type.
+
+## 11. Open Questions
+
+| Area          | Question                                                    |
+| ------------- | ----------------------------------------------------------- |
+| Offline Queue | Do offline queued operations require cryptographic receipt? |
+| Policy Layer  | Support chained rule evaluation with override markers?      |
+| Multi-Tenant  | Can a single battlestation shift between academies?         |
+
+---
+
+This page defines the Battlestation supporting entity in the persistent aetherbot domain.

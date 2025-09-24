@@ -1,0 +1,88 @@
+---
+Title: "Supporting: Pack Entity"
+slug: domain/entities/supporting/pack
+summary: Configured bundle definition enabling probabilistic card (and optional asset) distribution through an opening event.
+status: experimental
+lastUpdated: 2025-09-24
+stability: experimental
+tags: [supporting-entity, distribution, pack]
+---
+
+# Pack (Supporting Entity)
+
+## 1. Canonical Definition
+
+A **Pack** defines a distributable bundle product that, when opened, yields a set of card (and/or other asset) outcomes based on a rarity mix profile and edition constraints, optionally time-gated by availability windows.
+
+## 2. Responsibilities
+
+| Responsibility             | Description                                  |
+| -------------------------- | -------------------------------------------- |
+| Distribution Configuration | Encapsulates rarity mix / edition semantics. |
+| Pricing                    | Expresses purchase cost in tender units.     |
+| Availability Control       | Supports temporal gating (availableFrom/To). |
+| Opening Provenance         | Serves as parent reference for PackOpenings. |
+
+## 3. Identity & Referencing
+
+| Aspect     | Rule                               |
+| ---------- | ---------------------------------- |
+| Identifier | `packId`.                          |
+| Scope      | Academy optional (global if null). |
+| Edition    | Logical print / release grouping.  |
+
+## 4. Core Attributes
+
+| Field            | Type        | Notes                                       |
+| ---------------- | ----------- | ------------------------------------------- |
+| packId           | ID          | PK.                                         |
+| academyId        | ID(Academy) | Nullable.                                   |
+| name             | string      | Display.                                    |
+| edition          | string      | Required classification.                    |
+| rarityMixProfile | string      | Key referencing rarity distribution config. |
+| priceTenderUnits | number      | Purchase price.                             |
+| availableFrom    | timestamp   | Nullable start.                             |
+| availableTo      | timestamp   | Nullable end.                               |
+| status           | enum        | `ACTIVE`, `INACTIVE`, `RETIRED`.            |
+| createdAt        | timestamp   | Creation.                                   |
+| updatedAt        | timestamp   | Modification.                               |
+
+## 5. Invariants
+
+| Constraint                              | Reason                |
+| --------------------------------------- | --------------------- |
+| availableFrom < availableTo (if both)   | Temporal ordering     |
+| status=ACTIVE only within window        | Integrity             |
+| rarityMixProfile must resolve to config | Distribution validity |
+
+## 6. Domain Events
+
+| Event                   | Trigger           |
+| ----------------------- | ----------------- |
+| PackCreated             | Insert            |
+| PackActivated           | status -> ACTIVE  |
+| PackRetired             | status -> RETIRED |
+| PackAvailabilityChanged | window mutation   |
+
+## 7. API (Representative)
+
+```
+POST   /packs
+GET    /packs/{packId}
+GET    /packs?edition=...&status=...
+PATCH  /packs/{packId}
+POST   /packs/{packId}/activate
+POST   /packs/{packId}/retire
+```
+
+## 8. Open Questions
+
+| Area          | Question                                          |
+| ------------- | ------------------------------------------------- |
+| Randomness    | Need verifiable randomness proof integration?     |
+| Edition Lock  | Allow retroactive edition change?                 |
+| Rarity Config | External structured object instead of string key? |
+
+---
+
+This page defines the Pack supporting entity in the persistent aetherbot domain.

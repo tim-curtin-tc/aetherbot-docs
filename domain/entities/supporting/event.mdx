@@ -1,0 +1,90 @@
+---
+Title: "Supporting: Event Entity"
+slug: domain/entities/supporting/event
+summary: Scheduled or on-demand competitive instance producing results and optionally feeding standings.
+status: experimental
+lastUpdated: 2025-09-24
+stability: experimental
+tags: [supporting-entity, competition, event]
+---
+
+# Event (Supporting Entity)
+
+## 1. Canonical Definition
+
+An **Event** is a scheduled or triggered competitive play instance referencing a ruleset, participant roster, match structure, and producing ranked or scored outcomes.
+
+## 2. Responsibilities
+
+| Responsibility           | Description                                               |
+| ------------------------ | --------------------------------------------------------- |
+| Scheduling               | Start/end or open window configuration.                   |
+| Participation Governance | Admission rules & capacity constraints.                   |
+| Match Orchestration      | Generates matches/rounds per format.                      |
+| Result Emission          | Emits standings or scores.                                |
+| Upstream Integration     | Optional contribution to tournament or season aggregates. |
+
+## 3. Identity & Referencing
+
+| Aspect              | Rule                     |
+| ------------------- | ------------------------ |
+| Identifier          | `eventId`.               |
+| Ruleset             | rulesetId reference.     |
+| Optional Tournament | tournamentId (nullable). |
+
+## 4. Core Attributes
+
+| Field                    | Type            | Notes                                             |
+| ------------------------ | --------------- | ------------------------------------------------- |
+| eventId                  | ID              | PK.                                               |
+| title                    | string          | Display name.                                     |
+| rulesetId                | ID(Ruleset)     | Governing constraints.                            |
+| tournamentId             | ID(Tournament)  | Optional parent.                                  |
+| scheduledStart           | timestamp       | Planned start.                                    |
+| scheduledEnd             | timestamp       | Planned end.                                      |
+| status                   | enum            | PLANNED, OPEN, IN_PROGRESS, COMPLETED, CANCELLED. |
+| maxParticipants          | integer         | Capacity limit.                                   |
+| registeredParticipantIds | `array<string>` | Current roster.                                   |
+| createdDateTime          | timestamp       | Creation time.                                    |
+| updatedDateTime          | timestamp       | Mutation time.                                    |
+
+## 5. Invariants
+
+| Constraint                                           | Reason               |
+| ---------------------------------------------------- | -------------------- |
+| registeredParticipantIds length `<=` maxParticipants | Capacity control     |
+| Cannot OPEN before scheduledStart - lead window      | Operational policy   |
+| Results immutable post COMPLETED                     | Historical integrity |
+
+## 6. Domain Events
+
+| Event                      | Trigger               |
+| -------------------------- | --------------------- |
+| EventCreated               | Insert                |
+| EventOpened                | status -> OPEN        |
+| EventStarted               | status -> IN_PROGRESS |
+| EventCompleted             | status -> COMPLETED   |
+| EventCancelled             | status -> CANCELLED   |
+| EventParticipantRegistered | Roster change         |
+
+## 7. API (Representative)
+
+```
+POST   /events
+GET    /events/{id}
+GET    /events?status=OPEN
+POST   /events/{id}/register
+POST   /events/{id}/cancel
+```
+
+## 8. Open Questions
+
+| Area                         | Question                                |
+| ---------------------------- | --------------------------------------- |
+| Dynamic Expansion            | Allow raising maxParticipants mid OPEN? |
+| Late Entry Policy            | Grace period after OPEN?                |
+| Match Generation Plugability | Strategy injection points?              |
+
+---
+
+This page defines the Event supporting entity in the persistent aetherbot domain.

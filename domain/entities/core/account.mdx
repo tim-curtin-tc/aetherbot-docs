@@ -1,0 +1,140 @@
+---
+Title: "Core: Account Entity"
+slug: domain/entities/account
+summary: Persistent representation of an authenticated actor account in the aetherbot domain governing identity, roles, and ownership surfaces.
+status: experimental
+lastUpdated: 2025-09-24
+stability: experimental
+tags: [core-entity, identity, security]
+---
+
+# Account (Core Domain Entity)
+
+## 1. Canonical Definition
+
+An **Account** is the root authentication and authorization principal in the aetherbot domain. It owns credentials, role assignments, and acts as the administrative container for subordinate domain objects (e.g., Academy ownership, Aetherbot custody, Collection / Card ownership). It is distinct from an in-universe "Human" participant profile (which may extend behavioral or narrative attributes) but may map 1:1 in most present use cases.
+
+## 2. Primary Responsibilities
+
+| Responsibility            | Description                                                                         |
+| ------------------------- | ----------------------------------------------------------------------------------- |
+| Identity Anchor           | Provides unique, immutable accountId for cross-entity referencing.                  |
+| Credential Binding        | Links to authentication provider records (OIDC / email / device gating).            |
+| Role & Capability Surface | Stores global and contextual role assignments (system ADMIN, academy ADMIN).        |
+| Ownership & Custody       | Acts as legal/ledger owner of AetherbotCards, Aetherbots, and resource allocations. |
+| Integrity Tracking        | Accumulates trust, violation strikes, and audit classification.                     |
+| Session & Access Policy   | Enforces MFA state, device posture (if applicable), and token revocation triggers.  |
+
+## 3. Identity & Referencing
+
+| Aspect                 | Rule                                                                                                 |
+| ---------------------- | ---------------------------------------------------------------------------------------------------- |
+| Global Identifier      | `accountId` (UUID v7 or ULID).                                                                       |
+| External Provider Keys | Stored hashed / tokenized; never exposed raw.                                                        |
+| Display Handle         | Unique handle (policy: lowercase alnum + hyphen, length 3–40).                                       |
+| Status                 | `ACTIVE`, `LOCKED`, `SUSPENDED`, `DELETED_SOFT`.                                                     |
+| Trust Tier             | Derived classification based on history & verification (e.g., `UNVERIFIED`, `VERIFIED`, `ELEVATED`). |
+
+## 4. Core Attribute Model
+
+| Field                | Type      | Card | Notes                                                                     |
+| -------------------- | --------- | ---- | ------------------------------------------------------------------------- |
+| accountId            | ID        | 1    | PK.                                                                       |
+| handle               | string    | 1    | Unique; immutable after 14 days grace window.                             |
+| email                | string    | 0..1 | Optional if external provider not email-based. Unique index when present. |
+| status               | enum      | 1    | See Status set.                                                           |
+| trustTier            | enum      | 1    | Derived; may be cached.                                                   |
+| roles                | JSON      | 0..1 | Map of globalRoles + scopedRoles.                                         |
+| metadata             | JSON      | 0..1 | Extensible namespaced.                                                    |
+| securityFlags        | JSON      | 0..1 | Compromised indicators, MFA required, etc.                                |
+| violationStrikeCount | int       | 1    | Integrity infra increments.                                               |
+| createdAt            | timestamp | 1    | System set.                                                               |
+| updatedAt            | timestamp | 1    | System updated.                                                           |
+| deletedAt            | timestamp | 0..1 | Soft deletion boundary.                                                   |
+| version              | int       | 1    | OCC.                                                                      |
+
+## 5. Relationship Topology
+
+| Related Entity    | Type         | Cardinality (from Account) | Notes                                                       |
+| ----------------- | ------------ | -------------------------- | ----------------------------------------------------------- |
+| Academy           | Owns         | 0..N                       | As ownerAccountId.                                          |
+| Human             | Realizes     | 0..1                       | Optional enriched participant profile.                      |
+| Aetherbot         | Custodies    | 0..N                       | Ownership or operational control.                           |
+| AetherbotCard     | Owns         | 0..N                       | Inventory / collection.                                     |
+| Team              | Participates | 0..N                       | Via membership bridging through Human or direct if allowed. |
+| IntegrityIncident | Subject      | 0..N                       | For auditing trust tier.                                    |
+| AuditLogEntry     | Emits        | 0..N                       | For status changes, role updates.                           |
+| SessionToken      | Issues       | 0..N                       | If storing session artifacts.                               |
+
+## 6. Lifecycle States
+
+Simplified:
+
+```
+ACTIVE -> (LOCKED | SUSPENDED | DELETED_SOFT)
+LOCKED -> ACTIVE
+SUSPENDED -> ACTIVE | DELETED_SOFT
+DELETED_SOFT (terminal for user actions; background purge optional)
+```
+
+## 7. Invariants & Constraints
+
+| Constraint                                | Rationale                                    | Enforcement         |
+| ----------------------------------------- | -------------------------------------------- | ------------------- |
+| Unique handle                             | Public addressing & mention system stability | DB unique index     |
+| Email uniqueness                          | Prevent duplicate phishing surfaces          | DB + app validation |
+| No new sessions if not ACTIVE             | Security posture                             | Auth service guard  |
+| Strike threshold triggers SUSPENDED       | Auto-mitigate abuse                          | Rule engine         |
+| Ownership transfer requires ACTIVE target | Avoid orphaned assets                        | Transactional guard |
+
+## 8. Domain Events
+
+| Event                   | Trigger                       |
+| ----------------------- | ----------------------------- | -------------------- |
+| AccountCreated          | Insert                        |
+| AccountLocked           | Status -> LOCKED              |
+| AccountSuspended        | Status -> SUSPENDED           |
+| AccountReactivated      | (LOCKED                       | SUSPENDED) -> ACTIVE |
+| AccountSoftDeleted      | Status -> DELETED_SOFT        |
+| AccountRolesUpdated     | roles mutation                |
+| AccountTrustTierChanged | Derived shift across boundary |
+
+## 9. API Surface (Representative)
+
+```
+POST   /accounts
+GET    /accounts/{accountId}
+GET    /accounts?handle=...&status=...
+PATCH  /accounts/{accountId}
+POST   /accounts/{accountId}/lock
+POST   /accounts/{accountId}/suspend
+POST   /accounts/{accountId}/reactivate
+DELETE /accounts/{accountId} (soft)
+```
+
+## 10. Indexing & Query Patterns
+
+| Query                  | Index                              |
+| ---------------------- | ---------------------------------- |
+| Lookup by handle       | Unique(handle)                     |
+| Filter by status       | (status, accountId)                |
+| Trust tier cohort      | (trustTier, status) partial ACTIVE |
+| Strike escalation scan | (violationStrikeCount DESC)        |
+
+## 11. Security / Observability
+
+- Sensitive identifiers stored hashed/salted where applicable.
+- Audit every role change with actorId + diff payload.
+- Rate-limit mutation endpoints by trustTier & recent violation signals.
+
+## 12. Open Questions
+
+| Area                     | Question                                                    |
+| ------------------------ | ----------------------------------------------------------- |
+| Handle Reassignment      | Allow recycling after deletion? Grace period length?        |
+| Multi-Factor Policy      | Enforce per trustTier boundary or per resource sensitivity? |
+| Human Profile Separation | Hard separate table vs JSON inline extension?               |
+
+---
+
+This page defines the Account entity within the persistent aetherbot domain.

@@ -1,0 +1,89 @@
+---
+Title: "Supporting: League Season Entity"
+slug: domain/entities/supporting/league-season
+summary: Structured competitive interval aggregating tournaments, standings, and reward distribution logic.
+status: experimental
+lastUpdated: 2025-09-24
+stability: experimental
+tags: [supporting-entity, competition, scheduling]
+---
+
+# League Season (Supporting Entity)
+
+## 1. Canonical Definition
+
+A **League Season** encapsulates a bounded competitive timeframe grouping tournaments, aggregating participant performance into standings, and orchestrating staged reward unlocks.
+
+## 2. Responsibilities
+
+| Responsibility         | Description                                     |
+| ---------------------- | ----------------------------------------------- |
+| Temporal Boundary      | Defines start/end timestamps.                   |
+| Tournament Aggregation | Associates included tournamentIds.              |
+| Standings Accumulation | Aggregates scoring across events.               |
+| Reward Schedule        | Specifies reward tiers & distribution triggers. |
+| State Management       | PLANNED -> ACTIVE -> COMPLETED -> ARCHIVED.     |
+
+## 3. Identity & Referencing
+
+| Aspect          | Rule                              |
+| --------------- | --------------------------------- |
+| Identifier      | `leagueSeasonId`.                 |
+| Composite Key   | (leagueSeasonId) globally unique. |
+| Tournament Link | list of tournamentIds.            |
+
+## 4. Core Attributes
+
+| Field           | Type                | Notes                                 |
+| --------------- | ------------------- | ------------------------------------- |
+| leagueSeasonId  | ID                  | PK.                                   |
+| title           | string              | Human readable.                       |
+| startDateTime   | timestamp           | Activation boundary.                  |
+| endDateTime     | timestamp           | Closure boundary.                     |
+| status          | enum                | PLANNED, ACTIVE, COMPLETED, ARCHIVED. |
+| tournamentIds   | `array<string>`     | Member tournaments.                   |
+| scoringModel    | JSON                | Points weighting config.              |
+| rewardTiers     | `array<RewardTier>` | Threshold -> reward mapping.          |
+| createdDateTime | timestamp           | Creation.                             |
+| updatedDateTime | timestamp           | Last update.                          |
+
+## 5. Invariants
+
+| Constraint                                | Reason               |
+| ----------------------------------------- | -------------------- |
+| startDateTime < endDateTime               | Temporal validity    |
+| ACTIVE only when within boundary          | Consistency          |
+| Cannot mutate scoringModel after ACTIVE   | Fairness             |
+| Cannot extend endDateTime after COMPLETED | Historical integrity |
+
+## 6. Domain Events
+
+| Event                         | Trigger                |
+| ----------------------------- | ---------------------- |
+| LeagueSeasonCreated           | Insert                 |
+| LeagueSeasonActivated         | status -> ACTIVE       |
+| LeagueSeasonCompleted         | status -> COMPLETED    |
+| LeagueSeasonArchived          | status -> ARCHIVED     |
+| LeagueSeasonRewardDistributed | Reward batch execution |
+
+## 7. API (Representative)
+
+```
+POST   /league-seasons
+GET    /league-seasons/{id}
+GET    /league-seasons?status=ACTIVE
+POST   /league-seasons/{id}/activate
+POST   /league-seasons/{id}/archive
+```
+
+## 8. Open Questions
+
+| Area                             | Question                                        |
+| -------------------------------- | ----------------------------------------------- |
+| Mid-Season Scoring Adjustments   | Allowed via version bump & retro recalculation? |
+| Cross-Season Carryover           | Any ranking points that persist?                |
+| Retroactive Tournament Inclusion | Permitted before COMPLETED?                     |
+
+---
+
+This page defines the League Season supporting entity in the persistent aetherbot domain.

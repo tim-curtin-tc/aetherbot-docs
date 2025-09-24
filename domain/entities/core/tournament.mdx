@@ -1,0 +1,144 @@
+---
+Title: "Core: Tournament Entity"
+slug: domain/entities/tournament
+summary: Structured competitive event container orchestrating phases, brackets, eligibility, and resolution outcomes in the aetherbot domain.
+status: experimental
+lastUpdated: 2025-09-24
+stability: experimental
+tags: [core-entity, competition, event]
+---
+
+# Tournament (Core Domain Entity)
+
+## 1. Canonical Definition
+
+A **Tournament** is a persistent event aggregate coordinating registration, seeding, scheduling, bracket or pool phases, progression advancement, adjudication, and result finalization. It links eligible Teams / Humans, enforces rulesets, and emits structured outcomes (rankings, stats, advancement tokens).
+
+## 2. Primary Responsibilities
+
+| Responsibility             | Description                                                    |
+| -------------------------- | -------------------------------------------------------------- |
+| Registration Orchestration | Manages enrollment window, capacity caps, eligibility filters. |
+| Phase & Bracket Modeling   | Defines ordered competition phases (group stage, elimination). |
+| Seeding & Pairing          | Applies deterministic or rating-based placement logic.         |
+| Match Resolution Surface   | Associates match results & adjudication flows.                 |
+| Outcome Publishing         | Produces final placements & derived rewards.                   |
+| Integrity Safeguards       | Enforces anti-collusion, substitution, and timing constraints. |
+
+## 3. Identity & Referencing
+
+| Aspect            | Rule                                                                        |
+| ----------------- | --------------------------------------------------------------------------- |
+| Global Identifier | `tournamentId`.                                                             |
+| Slug              | Immutable external reference.                                               |
+| Name              | Mutably displayable; uniqueness recommended per season window.              |
+| Status            | `DRAFT`, `REG_OPEN`, `REG_CLOSED`, `IN_PROGRESS`, `COMPLETED`, `CANCELLED`. |
+| Visibility        | `PUBLIC`, `INVITE_ONLY`, `INTERNAL_TEST`.                                   |
+
+## 4. Core Attribute Model
+
+| Field              | Type      | Card | Notes                                                 |
+| ------------------ | --------- | ---- | ----------------------------------------------------- |
+| tournamentId       | ID        | 1    | PK.                                                   |
+| name               | string    | 1    | Display.                                              |
+| slug               | string    | 1    | Unique.                                               |
+| status             | enum      | 1    | See Status set.                                       |
+| visibility         | enum      | 1    | Discovery gating.                                     |
+| rulesetRef         | string    | 0..1 | Points to versioned rules document.                   |
+| formatSpec         | JSON      | 0..1 | Phase definitions, bracket style, advancement counts. |
+| registrationPolicy | JSON      | 0..1 | Eligibility gates, caps, deadlines.                   |
+| scheduleSpec       | JSON      | 0..1 | Time window(s), round timings.                        |
+| capacityLimit      | int       | 0..1 | Enrollment cap.                                       |
+| integrityFlags     | JSON      | 0..1 | Audit markers.                                        |
+| metadata           | JSON      | 0..1 | Extensible.                                           |
+| startedAt          | timestamp | 0..1 | Transition -> IN_PROGRESS.                            |
+| completedAt        | timestamp | 0..1 | Terminal success state.                               |
+| cancelledAt        | timestamp | 0..1 | Terminal aborted state.                               |
+| createdAt          | timestamp | 1    | System set.                                           |
+| updatedAt          | timestamp | 1    | System update.                                        |
+| version            | int       | 1    | OCC.                                                  |
+
+## 5. Relationship Topology
+
+| Related Entity    | Type                  | Cardinality (from Tournament) | Notes                              |
+| ----------------- | --------------------- | ----------------------------- | ---------------------------------- |
+| Team              | Registers             | 0..N                          | Via registration pivot.            |
+| Human             | Registers (solo mode) | 0..N                          | If individual format supported.    |
+| Match (future)    | Contains              | 0..N                          | Phase -> match mapping.            |
+| Academy           | Sponsors              | 0..1                          | Optional affiliation.              |
+| IntegrityIncident | Subject               | 0..N                          | Collusion / timing violations.     |
+| AuditLogEntry     | Emits                 | 0..N                          | Status, ruleset, schedule changes. |
+
+## 6. Lifecycle & Status Flow
+
+```
+DRAFT -> REG_OPEN -> REG_CLOSED -> IN_PROGRESS -> COMPLETED
+DRAFT -> CANCELLED
+REG_OPEN -> CANCELLED
+REG_CLOSED -> CANCELLED
+IN_PROGRESS -> CANCELLED (exception) |
+```
+
+## 7. Invariants & Constraints
+
+| Constraint                                          | Rationale               | Enforcement          |
+| --------------------------------------------------- | ----------------------- | -------------------- |
+| formatSpec phase ordering acyclic                   | Predictable progression | Validator            |
+| No registration after REG_CLOSED                    | Fairness                | State guard          |
+| Cannot start without >=2 valid entries              | Competitive validity    | Pre-transition check |
+| Cancellation requires reason code                   | Auditability            | Transition rule      |
+| Completed tournaments immutable (structural fields) | Historical integrity    | Write protection     |
+
+## 8. Domain Events
+
+| Event                        | Trigger                         |
+| ---------------------------- | ------------------------------- |
+| TournamentCreated            | Insert                          |
+| TournamentRegistrationOpened | status -> REG_OPEN              |
+| TournamentRegistrationClosed | status -> REG_CLOSED            |
+| TournamentStarted            | status -> IN_PROGRESS           |
+| TournamentCompleted          | status -> COMPLETED             |
+| TournamentCancelled          | status -> CANCELLED             |
+| TournamentFormatUpdated      | formatSpec mutation (pre-start) |
+| TournamentScheduleUpdated    | scheduleSpec mutation           |
+
+## 9. API Surface (Representative)
+
+```
+POST   /tournaments
+GET    /tournaments/{tournamentId}
+GET    /tournaments?status=...&visibility=...
+PATCH  /tournaments/{tournamentId}
+POST   /tournaments/{tournamentId}/open-registration
+POST   /tournaments/{tournamentId}/close-registration
+POST   /tournaments/{tournamentId}/start
+POST   /tournaments/{tournamentId}/complete
+POST   /tournaments/{tournamentId}/cancel
+```
+
+## 10. Indexing & Query Patterns
+
+| Query                   | Index                                          |
+| ----------------------- | ---------------------------------------------- | -------- |
+| Filter by status        | (status, startedAt DESC)                       |
+| Upcoming start schedule | (status, startedAt) partial status=IN_PROGRESS | REG_OPEN |
+| Completion archive      | (completedAt DESC)                             |
+| Visibility gating       | (visibility, status)                           |
+
+## 11. Observability & Integrity
+
+- Track registration churn (join/leaves) before close.
+- Emit bracket generation audit diff (seed list + algorithm parameters).
+- Monitor average match resolution latency for pacing insights.
+
+## 12. Open Questions
+
+| Area                  | Question                                 |
+| --------------------- | ---------------------------------------- |
+| Multi-format chaining | Support meta-tournament of sub events?   |
+| Dynamic reseeding     | Allow between phases if imbalance?       |
+| Prize distribution    | On-chain integration vs internal ledger? |
+
+---
+
+This page defines the Tournament entity within the persistent aetherbot domain.

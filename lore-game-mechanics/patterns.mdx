@@ -1,0 +1,217 @@
+---
+title: "Patterns & Energetics"
+slug: lore-game-mechanics/patterns
+summary: "Merged pattern taxonomy: overview, affinity schema, elements, emotional threads, dual/braided, environmental modifiers, state transitions."
+tags: ["lore", "patterns", "merged"]
+stability: draft
+lastUpdated: 2025-09-24
+---
+
+## Overview
+
+Patterns synthesize elemental and emotional Threads into coherent behavioral identities. This section formalizes classification rules, rarity signals, and environmental modulation.
+
+### Section Scope
+
+- Affinity schema
+- Elemental & emotional families
+- Dual / braided anomalies
+- Environmental modifiers & state transitions
+
+### Design Goals
+
+| Goal                    | Rationale                        |
+| ----------------------- | -------------------------------- |
+| Deterministic Taxonomy  | Enables consistent data modeling |
+| Extensible Rarity Model | Supports narrative escalation    |
+| Environmental Coupling  | Allows dynamic scenario design   |
+
+---
+
+## Affinity Schema
+
+Matrix of elemental and emotional Threads composing Patterns.
+
+### Summary
+
+Affinity combines one elemental family with one emotional Thread to define a core Pattern signature.
+
+### Elemental Families
+
+Arc, Terra, Flow, Ember, Gale, Umber, Aether.
+
+### Emotional Threads
+
+Courage, Sorrow, Curiosity, Fury, Serenity, Wit, Resolve.
+
+### Combination Rules
+
+| Rule                 | Explanation                                        |
+| -------------------- | -------------------------------------------------- |
+| One-to-One Base      | Standard Pattern: 1 elemental + 1 emotional        |
+| Dual Eligibility     | Rare anomalies may merge two full pairs            |
+| Conflict Constraints | Certain emotional pairs introduce instability risk |
+
+### System Specification
+
+```json
+{
+  "entity": "PatternAffinity",
+  "elementals": ["Arc", "Terra", "Flow", "Ember", "Gale", "Umber", "Aether"],
+  "emotionals": [
+    "Courage",
+    "Sorrow",
+    "Curiosity",
+    "Fury",
+    "Serenity",
+    "Wit",
+    "Resolve"
+  ],
+  "supportsDual": true
+}
+```
+
+### Extensibility Guidance
+
+Additions require justification for systemic balance and semantic clarity.
+
+---
+
+## Elemental Profiles
+
+| Element | Core Theme             | System Lean          | Environmental Synergy             |
+| ------- | ---------------------- | -------------------- | --------------------------------- |
+| Arc     | Energy, conduction     | Focus / Burst        | Storm & charged zones             |
+| Terra   | Stability, mass        | Defense / Resilience | Seismic or mineral substrates     |
+| Flow    | Adaptation, continuity | Support / Recovery   | Hydrated, fluidic environments    |
+| Ember   | Volatility, ignition   | Offensive DoT        | Combustible atmospheres           |
+| Gale    | Motion, vector control | Speed / Positioning  | Open / pressure-dynamic spaces    |
+| Umber   | Absorption, decay      | Suppression / Debuff | Low-light or saturated data voids |
+| Aether  | Transcendent linkage   | Hybrid / Special     | High-aerial or auroral fields     |
+
+### Balancing Considerations
+
+- Avoid element stacking dominance
+- Introduce counter-Patterns for each primary leverage
+
+---
+
+## Emotional Threads
+
+| Thread    | Core Drive             | Mechanical Influence  | Risk Vector        |
+| --------- | ---------------------- | --------------------- | ------------------ |
+| Courage   | Protective assertion   | Buff stabilization    | Overextension      |
+| Sorrow    | Absorptive empathy     | Suppression, drains   | Self-sustain loops |
+| Curiosity | Exploratory seeking    | Discovery bonuses     | Hazard exposure    |
+| Fury      | Aggressive escalation  | Damage amplification  | Fray acceleration  |
+| Serenity  | Harmonizing calm       | Recovery modulation   | Slow response      |
+| Wit       | Tactical improvisation | Cooldown manipulation | Variance spikes    |
+| Resolve   | Enduring purpose       | Scaling persistence   | Late onset fatigue |
+
+---
+
+## Dual & Braided Patterns
+
+Rare composite Patterns merging multiple elemental-emotional pairs.
+
+### Summary
+
+Dual (two discrete pairs) and braided (interleaved resonance) Patterns exhibit emergent behaviors and altered instability risks.
+
+### Classification
+
+| Type           | Description                         | Instability Risk |
+| -------------- | ----------------------------------- | ---------------- |
+| Dual           | Two full affinity pairs co-existing | Moderate         |
+| Braided        | Interwoven thread-level alternation | High             |
+| Proto-Keystone | Hypothetical stabilized braid       | Unknown          |
+
+### Constraints
+
+- Requires extreme Blooming conditions
+- Elevated Fray susceptibility until stabilized
+
+### System Specification
+
+```json
+{
+  "entity": "DualPattern",
+  "modes": ["dual", "braided"],
+  "risk": { "dual": "moderate", "braided": "high" },
+  "keystonePotential": true
+}
+```
+
+### Design Considerations
+
+Apply cost mechanisms (cooldowns, resource drains) to offset multi-affinity advantages.
+
+---
+
+## Environmental Modifiers
+
+External conditions shaping Pattern performance and emergence likelihood.
+
+| Condition            | Effect                      | Benefiting Affinities |
+| -------------------- | --------------------------- | --------------------- |
+| Auroral Surge        | Increased Bloom probability | Aether, Arc           |
+| Seismic Unrest       | Stability variance          | Terra                 |
+| Thermal Inversion    | Heat retention boosts DoT   | Ember                 |
+| Data Blackout        | Signal noise dampening      | Umber, Sorrow         |
+| Hydration Saturation | Recovery amplification      | Flow, Serenity        |
+| Jet Stream Spike     | Movement bonuses            | Gale, Wit             |
+
+### System Specification
+
+```json
+{
+  "entity": "EnvironmentModifier",
+  "attributes": ["name", "effect", "affinitySynergy", "riskImpact"],
+  "stability": "draft"
+}
+```
+
+### Design Notes
+
+Stacking should have diminishing returns to prevent runaway escalation.
+
+---
+
+## State Transitions
+
+Resonant state machine for Pattern stability and escalation.
+
+### Core States
+
+| State      | Description       | Exit Conditions                 |
+| ---------- | ----------------- | ------------------------------- |
+| Stable     | Normal operation  | Overstrain, environmental spike |
+| Resonant   | Amplified output  | Cooldown, overreach             |
+| Overstrain | Efficiency loss   | Recovery action, Fray shift     |
+| Fray Shift | Corruption vector | Mitigation, escalation          |
+
+### Transition Model
+
+Stable → Resonant → Overstrain → (Stable | Fray Shift)
+
+### System Specification
+
+```json
+{
+  "entity": "PatternStateMachine",
+  "states": ["Stable", "Resonant", "Overstrain", "FrayShift"],
+  "transitions": {
+    "Stable": ["Resonant"],
+    "Resonant": ["Overstrain", "Stable"],
+    "Overstrain": ["Stable", "FrayShift"],
+    "FrayShift": ["Stable"]
+  }
+}
+```
+
+### Balancing Hooks
+
+- Add friction to re-enter Resonant repeatedly.
+- Overstrain duration tied to mismatch between intent and Pattern temperament.
+
+---

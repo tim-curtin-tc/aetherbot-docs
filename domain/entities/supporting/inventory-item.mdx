@@ -1,0 +1,89 @@
+---
+Title: "Supporting: InventoryItem Entity"
+slug: domain/entities/supporting/inventory-item
+summary: Store-scoped stocked listing representing a purchasable or allocatable unit (card, aetherbot, pack, or derivative product).
+status: experimental
+lastUpdated: 2025-09-24
+stability: experimental
+tags: [supporting-entity, commerce, listing]
+---
+
+# InventoryItem (Supporting Entity)
+
+## 1. Canonical Definition
+
+An **InventoryItem** represents a discrete listing in a Store's available catalog, with quantity tracking, pricing in a Tender, temporal availability windows, and optional product metadata (edition, rarity, asset linkage).
+
+## 2. Responsibilities
+
+| Responsibility       | Description                                                        |
+| -------------------- | ------------------------------------------------------------------ |
+| Stock Tracking       | Maintains on-hand and reserved quantities.                         |
+| Pricing              | Provides base unit price in store's accepted tender.               |
+| Availability Windows | Controls time-based exposure (availableFrom/To).                   |
+| Product Association  | References underlying card or aetherbot blueprint when applicable. |
+
+## 3. Identity & Referencing
+
+| Aspect       | Rule                                                                        |
+| ------------ | --------------------------------------------------------------------------- |
+| Identifier   | `inventoryItemId`.                                                          |
+| Scope        | Store-scoped (`storeId`).                                                   |
+| Product Link | One of cardId or aetherbotId (nullable both only for generic future types). |
+
+## 4. Core Attributes
+
+| Field             | Type                    | Notes                                               |
+| ----------------- | ----------------------- | --------------------------------------------------- |
+| inventoryItemId   | ID                      | PK.                                                 |
+| storeId           | ID(Store)               | Required.                                           |
+| cardId            | ID(AetherbotCard)       | Nullable.                                           |
+| aetherbotId       | ID(Aetherbot blueprint) | Nullable.                                           |
+| quantityAvailable | integer                 | Current unreserved quantity.                        |
+| reservedQuantity  | integer                 | Held for pending orders.                            |
+| priceTenderUnits  | number                  | Price expressed in base tender units.               |
+| rarity            | enum                    | Optional classification (mirrors underlying asset). |
+| edition           | string                  | Optional.                                           |
+| availableFrom     | timestamp               | Nullable start.                                     |
+| availableTo       | timestamp               | Nullable end.                                       |
+| createdAt         | timestamp               | Creation.                                           |
+| updatedAt         | timestamp               | Modification.                                       |
+
+## 5. Invariants
+
+| Constraint                                                                  | Reason           |
+| --------------------------------------------------------------------------- | ---------------- |
+| reservedQuantity `<=` quantityAvailable                                     | Prevent oversell |
+| (cardId, aetherbotId) not both set simultaneously (unless multi-mode later) | Data clarity     |
+| quantityAvailable `>=` 0                                                    | Consistency      |
+
+## 6. Domain Events
+
+| Event                                  | Trigger                   |
+| -------------------------------------- | ------------------------- |
+| InventoryItemCreated                   | Insert                    |
+| InventoryItemStockAdjusted             | quantityAvailable delta   |
+| InventoryItemReservedAdjusted          | reservedQuantity delta    |
+| InventoryItemAvailabilityWindowChanged | availableFrom/To mutation |
+
+## 7. API (Representative)
+
+```
+POST   /inventory-items
+GET    /inventory-items/{inventoryItemId}
+GET    /inventory-items?storeId=...&active=...
+PATCH  /inventory-items/{inventoryItemId}
+POST   /inventory-items/{inventoryItemId}/adjust-stock
+```
+
+## 8. Open Questions
+
+| Area               | Question                                     |
+| ------------------ | -------------------------------------------- |
+| Dynamic Pricing    | Support demand-driven repricing?             |
+| Reservation Expiry | Automatic release window needed?             |
+| Bundles            | Composite items referencing multiple assets? |
+
+---
+
+This page defines the InventoryItem supporting entity in the persistent aetherbot domain.

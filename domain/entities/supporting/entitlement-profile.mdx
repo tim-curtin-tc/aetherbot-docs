@@ -1,0 +1,80 @@
+---
+Title: "Supporting: EntitlementProfile Entity"
+slug: domain/entities/supporting/entitlement-profile
+summary: Capability gating profile grouping feature flags, action permissions, or module access scopes.
+status: experimental
+lastUpdated: 2025-09-24
+stability: experimental
+tags: [supporting-entity, capability, permissions]
+---
+
+# EntitlementProfile (Supporting Entity)
+
+## 1. Canonical Definition
+
+An **EntitlementProfile** aggregates capability identifiers (capabilities array) that can be applied to Battlestations or other execution contexts to constrain available operations.
+
+## 2. Responsibilities
+
+| Responsibility      | Description                                    |
+| ------------------- | ---------------------------------------------- |
+| Capability Bundling | Groups related capabilities for reuse.         |
+| Assignment Surface  | Attachable to Battlestations or future scopes. |
+| State Control       | Active vs inactive gating.                     |
+
+## 3. Identity & Referencing
+
+| Aspect       | Rule                                      |
+| ------------ | ----------------------------------------- |
+| Identifier   | `entitlementProfileId`.                   |
+| Status       | `ACTIVE`, `INACTIVE`.                     |
+| Capabilities | Array of string identifiers (namespaced). |
+
+## 4. Core Attributes
+
+| Field                | Type            | Notes              |
+| -------------------- | --------------- | ------------------ |
+| entitlementProfileId | ID              | PK.                |
+| name                 | string          | Human label.       |
+| capabilities         | `array<string>` | Capability tokens. |
+| status               | enum            | Lifecycle state.   |
+| createdAt            | timestamp       | Creation time.     |
+| updatedAt            | timestamp       | Modification time. |
+
+## 5. Invariants
+
+| Constraint                            | Reason                       |
+| ------------------------------------- | ---------------------------- |
+| Capability tokens unique per profile  | Prevent redundant evaluation |
+| Profile cannot be applied if INACTIVE | Enforce gating integrity     |
+
+## 6. Domain Events
+
+| Event                           | Trigger               |
+| ------------------------------- | --------------------- |
+| EntitlementProfileCreated       | Insert                |
+| EntitlementProfileUpdated       | capabilities mutation |
+| EntitlementProfileStatusChanged | status mutation       |
+
+## 7. API (Representative)
+
+```
+POST   /entitlement-profiles
+GET    /entitlement-profiles/{entitlementProfileId}
+GET    /entitlement-profiles?status=...
+PATCH  /entitlement-profiles/{entitlementProfileId}
+POST   /entitlement-profiles/{entitlementProfileId}/deactivate
+POST   /entitlement-profiles/{entitlementProfileId}/activate
+```
+
+## 8. Open Questions
+
+| Area                 | Question                                       |
+| -------------------- | ---------------------------------------------- |
+| Namespacing          | Standard prefix taxonomy?                      |
+| Hierarchies          | Nested profile inclusion?                      |
+| Capability Discovery | Central registry or decentralized declaration? |
+
+---
+
+This page defines the EntitlementProfile supporting entity in the persistent aetherbot domain.

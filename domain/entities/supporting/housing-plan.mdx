@@ -1,0 +1,81 @@
+---
+Title: "Supporting: HousingPlan Entity"
+slug: domain/entities/supporting/housing-plan
+summary: Structured capacity plan allocating residential or facility capacity to collectors within an Academy.
+status: experimental
+lastUpdated: 2025-09-24
+stability: experimental
+tags: [supporting-entity, capacity]
+---
+
+# HousingPlan (Supporting Entity)
+
+## 1. Canonical Definition
+
+A **HousingPlan** defines a capacity-controlled accommodation offering (dorm wing, lab bench allocation, special residency) within an Academy with temporal boundaries and status lifecycle.
+
+## 2. Responsibilities
+
+| Responsibility    | Description                                          |
+| ----------------- | ---------------------------------------------------- |
+| Capacity Modeling | Defines plan type, capacity semantics, and schedule. |
+| Enrollment Anchor | Supports assignment records (HousingAssignments).    |
+| Lifecycle Control | Active/inactive temporal gating.                     |
+
+## 3. Identity & Referencing
+
+| Aspect     | Rule                  |
+| ---------- | --------------------- |
+| Identifier | `housingPlanId`.      |
+| Scope      | Academy.              |
+| Status     | `ACTIVE`, `INACTIVE`. |
+
+## 4. Core Attributes
+
+| Field         | Type        | Notes                                            |
+| ------------- | ----------- | ------------------------------------------------ |
+| housingPlanId | ID          | PK.                                              |
+| academyId     | ID(Academy) | Required.                                        |
+| name          | string      | Display.                                         |
+| capacityType  | string      | Qualitative label (e.g., DORM_SINGLE, LAB_SLOT). |
+| status        | enum        | Lifecycle.                                       |
+| startDate     | date        | Activation boundary.                             |
+| endDate       | date        | Optional retirement boundary.                    |
+| createdAt     | timestamp   | Creation.                                        |
+| updatedAt     | timestamp   | Modification.                                    |
+
+## 5. Invariants
+
+| Constraint                          | Reason            |
+| ----------------------------------- | ----------------- |
+| startDate < endDate (if endDate)    | Temporal ordering |
+| Plan ACTIVE only within date window | Integrity         |
+
+## 6. Domain Events
+
+| Event                  | Trigger            |
+| ---------------------- | ------------------ |
+| HousingPlanCreated     | Insert             |
+| HousingPlanActivated   | status -> ACTIVE   |
+| HousingPlanDeactivated | status -> INACTIVE |
+
+## 7. API (Representative)
+
+```
+POST   /housing-plans
+GET    /housing-plans/{housingPlanId}
+GET    /housing-plans?academyId=...&status=...
+PATCH  /housing-plans/{housingPlanId}
+```
+
+## 8. Open Questions
+
+| Area               | Question                                   |
+| ------------------ | ------------------------------------------ |
+| Capacity Semantics | Track numeric capacity or external tie-in? |
+| Overbooking Policy | Allow waitlists?                           |
+| Plan Types         | Should capacityType be enumerated?         |
+
+---
+
+This page defines the HousingPlan supporting entity in the persistent aetherbot domain.

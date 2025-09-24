@@ -1,0 +1,86 @@
+---
+Title: "Supporting: Currency Entity"
+slug: domain/entities/supporting/currency
+summary: Academy-scoped fungible currency used for pricing, rewards, and internal economic settlement (formerly Tender).
+status: experimental
+lastUpdated: 2025-09-24
+stability: experimental
+tags: [supporting-entity, economy]
+---
+
+> Migration Note: Formerly named "Tender". Renamed for alignment with API surface (Currencies / CurrencyAccounts).
+
+# Currency (Supporting Entity)
+
+## 1. Canonical Definition
+
+A **Currency** represents a fungible unit (credits / energy units / localized economy token) defined within an Academy context used to price inventory, packs, or services and to credit participant accounts.
+
+## 2. Responsibilities
+
+| Responsibility        | Description                                               |
+| --------------------- | --------------------------------------------------------- |
+| Unit Definition       | Establishes code, name, decimal precision.                |
+| Pricing Baseline      | Supports valuation for inventory & pack pricing.          |
+| Balance Compatibility | Enables CurrencyAccounts to store and transact units.     |
+| Economic Governance   | Activation flag gates circulation & pricing availability. |
+
+## 3. Identity & Referencing
+
+| Aspect      | Rule                                    |
+| ----------- | --------------------------------------- |
+| Identifier  | `currencyId`.                           |
+| Scope       | Academy-scoped (academyId).             |
+| Active Flag | Boolean enabling/disabling circulation. |
+
+## 4. Core Attributes
+
+| Field      | Type        | Notes                                      |
+| ---------- | ----------- | ------------------------------------------ |
+| currencyId | ID          | PK.                                        |
+| academyId  | ID(Academy) | Required.                                  |
+| code       | string      | Uppercase short code (unique per academy). |
+| name       | string      | Display label.                             |
+| decimals   | integer     | Precision (0–8 typical).                   |
+| activeFlag | boolean     | Circulation status.                        |
+| createdAt  | timestamp   | Creation time.                             |
+| updatedAt  | timestamp   | Modification time.                         |
+
+## 5. Invariants
+
+| Constraint                                                   | Reason                 |
+| ------------------------------------------------------------ | ---------------------- |
+| (academyId, code) unique                                     | Prevent ambiguity      |
+| decimals stable post-issuance                                | Avoid fractional drift |
+| Cannot deactivate if non-zero circulating aggregate (future) | Economic integrity     |
+
+## 6. Domain Events
+
+| Event               | Trigger             |
+| ------------------- | ------------------- |
+| CurrencyCreated     | Insert              |
+| CurrencyDeactivated | activeFlag -> false |
+| CurrencyReactivated | activeFlag -> true  |
+
+## 7. API (Representative)
+
+```
+POST   /currencies
+GET    /currencies/{currencyId}
+GET    /currencies?academyId=...&active=...
+PATCH  /currencies/{currencyId}
+POST   /currencies/{currencyId}/deactivate
+POST   /currencies/{currencyId}/activate
+```
+
+## 8. Open Questions
+
+| Area          | Question                                  |
+| ------------- | ----------------------------------------- |
+| Cross-Academy | Any multi-academy tender harmonization?   |
+| FX            | Support conversion rates between tenders? |
+| Supply Policy | Track mint/burn events?                   |
+
+---
+
+This page defines the Currency supporting entity in the persistent aetherbot domain.

@@ -1,0 +1,136 @@
+---
+Title: "Core: AetherbotCard Entity"
+slug: domain/entities/aetherbotcard
+summary: Canonical collectible / blueprint artifact enabling instantiation or capability licensing for Aetherbots in the aetherbot domain.
+status: experimental
+lastUpdated: 2025-09-24
+stability: experimental
+tags: [core-entity, asset, blueprint]
+---
+
+# AetherbotCard (Core Domain Entity)
+
+## 1. Canonical Definition
+
+An **AetherbotCard** is a persistent collectible (and optionally consumable or licensable) blueprint artifact that defines baseline capability, flavor metadata, rarity classification, and instantiation permissions for derived Aetherbots. It may also function as a gating license for equipping certain techniques or pattern modules.
+
+## 2. Primary Responsibilities
+
+| Responsibility            | Description                                                                      |
+| ------------------------- | -------------------------------------------------------------------------------- |
+| Blueprint Definition      | Captures archetype stats & permitted capability envelope.                        |
+| Rarity & Classification   | Supplies tier, scarcity, and distribution mechanics.                             |
+| Ownership & Transfer      | Behaves as tradable asset (if economy enabled).                                  |
+| Instantiation License     | Authorizes creation of new Aetherbot instances (single-use or multi-use policy). |
+| Capability Unlock Surface | Grants access to techniques/pattern modules otherwise restricted.                |
+
+## 3. Identity & Referencing
+
+| Aspect            | Rule                                                               |
+| ----------------- | ------------------------------------------------------------------ |
+| Global Identifier | `aetherbotCardId`.                                                 |
+| Symbol / Code     | Short uppercase code (unique).                                     |
+| Slug              | Kebab-case stable external reference.                              |
+| Status            | `ACTIVE`, `VAULTED`, `RETIRED`.                                    |
+| Rarity            | Enum: `COMMON`, `UNCOMMON`, `RARE`, `EPIC`, `LEGENDARY`, `MYTHIC`. |
+
+## 4. Core Attribute Model
+
+| Field                  | Type      | Card | Notes                       |
+| ---------------------- | --------- | ---- | --------------------------- | --------- | ------------------------------ |
+| aetherbotCardId        | ID        | 1    | PK.                         |
+| code                   | string    | 1    | Unique; immutable.          |
+| slug                   | string    | 1    | Unique; immutable.          |
+| name                   | string    | 1    | Display.                    |
+| flavorText             | string    | 0..1 | Optional concise lore line. |
+| description            | richtext  | 0..1 | Extended narrative.         |
+| status                 | enum      | 1    | See Status set.             |
+| rarity                 | enum      | 1    | Rarity classification.      |
+| baseStats              | JSON      | 0..1 | Archetype numeric vector.   |
+| permittedTechniqueTags | JSON      | 0..1 | Whitelist gating.           |
+| licensePolicy          | JSON      | 0..1 | `\{ mode: SINGLE_USE        | MULTI_USE | UNLIMITED, remainingUses? \}`. |
+| supplyCap              | int       | 0..1 | For finite distribution.    |
+| mintedCount            | int       | 1    | Cache of issued supply.     |
+| integrityFlags         | JSON      | 0..1 | Balance review markers.     |
+| metadata               | JSON      | 0..1 | Extensible.                 |
+| createdAt              | timestamp | 1    | System set.                 |
+| updatedAt              | timestamp | 1    | System update.              |
+| vaultedAt              | timestamp | 0..1 | If status=VAULTED.          |
+| retiredAt              | timestamp | 0..1 | Terminal archival.          |
+| version                | int       | 1    | OCC.                        |
+
+## 5. Relationship Topology
+
+| Related Entity    | Type         | Cardinality (from Card) | Notes                                               |
+| ----------------- | ------------ | ----------------------- | --------------------------------------------------- |
+| Account           | Owned-by     | 0..N                    | If tradable and held by accounts (ownership table). |
+| Aetherbot         | Instantiates | 0..N                    | Derived instances reference originating card.       |
+| Technique         | Unlocks      | 0..N                    | Through permittedTechniqueTags.                     |
+| Pattern Module    | Enables      | 0..N                    | If gating modules.                                  |
+| IntegrityIncident | Subject      | 0..N                    | Balance exploit tracking.                           |
+| AuditLogEntry     | Emits        | 0..N                    | Status, supply changes.                             |
+
+## 6. Lifecycle & Status
+
+- `ACTIVE`: Distributable and usable for instantiation.
+- `VAULTED`: Frozen supply; existing ownership unaffected.
+- `RETIRED`: Permanently locked; no new instantiations.
+
+## 7. Invariants & Constraints
+
+| Constraint                                         | Rationale               | Enforcement            |
+| -------------------------------------------------- | ----------------------- | ---------------------- |
+| code & slug immutability                           | Prevent reference drift | DB & app guard         |
+| mintedCount `<=` supplyCap (if cap set)            | Supply integrity        | Transactional check    |
+| licensePolicy.remainingUses decremented atomically | Prevent double mint     | Atomic update w/ guard |
+| No instantiation if status not ACTIVE              | Economy integrity       | Service validator      |
+
+## 8. Domain Events
+
+| Event                          | Trigger                                 |
+| ------------------------------ | --------------------------------------- |
+| AetherbotCardCreated           | Insert                                  |
+| AetherbotCardStatusChanged     | status mutation                         |
+| AetherbotCardSupplyIncremented | mintedCount increment                   |
+| AetherbotCardVaulted           | status -> VAULTED                       |
+| AetherbotCardRetired           | status -> RETIRED                       |
+| AetherbotCardLicenseConsumed   | Single-use or counted license decrement |
+
+## 9. API Surface (Representative)
+
+```
+POST   /aetherbot-cards
+GET    /aetherbot-cards/{aetherbotCardId}
+GET    /aetherbot-cards?rarity=...&status=...
+PATCH  /aetherbot-cards/{aetherbotCardId}
+POST   /aetherbot-cards/{aetherbotCardId}/vault
+POST   /aetherbot-cards/{aetherbotCardId}/retire
+POST   /aetherbot-cards/{aetherbotCardId}/mint-instance
+```
+
+## 10. Indexing & Query Patterns
+
+| Query                    | Index                    |
+| ------------------------ | ------------------------ |
+| Lookup by code           | Unique(code)             |
+| Filter by rarity         | (rarity, status)         |
+| Active distribution scan | (status) partial ACTIVE  |
+| Supply exhaustion check  | (mintedCount, supplyCap) |
+
+## 11. Observability & Integrity
+
+- Track mint velocity by rarity for anomaly detection.
+- Log all license consumption with correlationId.
+- Flag cards with high incident correlation vs usage baseline.
+
+## 12. Open Questions
+
+| Area                   | Question                                               |
+| ---------------------- | ------------------------------------------------------ |
+| Economic Layer         | Are transfers on-ledger or internal DB only?           |
+| Dynamic Rebalancing    | Can baseStats be patched post-mint? Snapshot strategy? |
+| License Mode Evolution | Allow switching SINGLE_USE -> MULTI_USE mid-life?      |
+
+---
+
+This page defines the AetherbotCard entity within the persistent aetherbot domain.

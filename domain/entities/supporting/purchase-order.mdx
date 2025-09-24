@@ -1,0 +1,91 @@
+---
+Title: "Supporting: Purchase Order Entity"
+slug: domain/entities/supporting/purchase-order
+summary: Instructional commercial order capturing intent to acquire SKUs (packs, entitlements) prior to fulfillment.
+status: experimental
+lastUpdated: 2025-09-24
+stability: experimental
+tags: [supporting-entity, commerce, order]
+---
+
+# Purchase Order (Supporting Entity)
+
+## 1. Canonical Definition
+
+A **Purchase Order** (PO) records a user's intent to acquire one or more purchasable domain items (packs, entitlement grants, currency lots) with pricing, stateful authorization, and reconciliation hooks.
+
+## 2. Responsibilities
+
+| Responsibility  | Description                                              |
+| --------------- | -------------------------------------------------------- |
+| Offer Snapshot  | Captures items, unit prices, currency at order time.     |
+| Payment Binding | Associates payment method / tender reference.            |
+| Lifecycle State | CREATED -> AUTHORIZED -> FULFILLED / CANCELLED / FAILED. |
+| Reconciliation  | Supports post-fulfillment audit & ledger alignment.      |
+
+## 3. Identity & Referencing
+
+| Aspect     | Rule                                           |
+| ---------- | ---------------------------------------------- |
+| Identifier | `purchaseOrderId`.                             |
+| Buyer      | accountId / humanId depending on auth context. |
+| Payment    | tenderAccountId or external payment reference. |
+
+## 4. Core Attributes
+
+| Field           | Type                       | Notes                                              |
+| --------------- | -------------------------- | -------------------------------------------------- |
+| purchaseOrderId | ID                         | PK.                                                |
+| buyerAccountId  | ID(Account)                | Primary buyer context.                             |
+| buyerHumanId    | ID(Human)                  | Optional explicit human.                           |
+| lineItems       | `array<PurchaseOrderLine>` | Snapshot (sku, qty, unitPrice, currency).          |
+| subtotal        | decimal                    | Sum line (qty \* unitPrice).                       |
+| tax             | decimal                    | Jurisdictional computed.                           |
+| total           | decimal                    | subtotal + tax - discounts.                        |
+| currencyCode    | string                     | ISO-4217 or platform code.                         |
+| status          | enum                       | CREATED, AUTHORIZED, FULFILLED, CANCELLED, FAILED. |
+| createdDateTime | timestamp                  | Creation time.                                     |
+| updatedDateTime | timestamp                  | Last mutation.                                     |
+| expiresAt       | timestamp                  | Payment auth expiry.                               |
+
+## 5. Invariants
+
+| Constraint                                  | Reason               |
+| ------------------------------------------- | -------------------- |
+| total = subtotal + tax - discounts          | Accounting integrity |
+| Cannot FULFILL before AUTHORIZED            | Payment assurance    |
+| LineItems immutable post AUTHORIZED         | Snapshot fidelity    |
+| Expiry triggers CANCELLED if not AUTHORIZED | Resource hygiene     |
+
+## 6. Domain Events
+
+| Event                   | Trigger              |
+| ----------------------- | -------------------- |
+| PurchaseOrderCreated    | Insert               |
+| PurchaseOrderAuthorized | Status -> AUTHORIZED |
+| PurchaseOrderFulfilled  | Status -> FULFILLED  |
+| PurchaseOrderCancelled  | Status -> CANCELLED  |
+| PurchaseOrderFailed     | Status -> FAILED     |
+| PurchaseOrderExpired    | System expiry path   |
+
+## 7. API (Representative)
+
+```
+POST   /purchase-orders
+GET    /purchase-orders/{id}
+POST   /purchase-orders/{id}/authorize
+POST   /purchase-orders/{id}/cancel
+```
+
+## 8. Open Questions
+
+| Area                | Question                                           |
+| ------------------- | -------------------------------------------------- |
+| Partial Fulfillment | Deliver subset lines or all-or-nothing?            |
+| Discount Model      | Separate promotion lines vs inline discount field? |
+| Multi-Currency      | Lock FX rate snapshot per line?                    |
+| Fraud Signals       | Embed scoring attributes or external reference?    |
+
+---
+
+This page defines the Purchase Order supporting entity in the persistent aetherbot domain.

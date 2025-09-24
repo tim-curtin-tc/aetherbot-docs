@@ -1,0 +1,191 @@
+---
+Title: "Core: Academy Entity"
+slug: domain/entities/academy
+summary: Persistent representation of an Academy – the institutional node where humans, aetherbots, and progression systems converge in the aetherbot domain.
+status: experimental
+lastUpdated: 2025-09-24
+stability: experimental
+tags: [core-entity, progression, social]
+---
+
+# Academy (Core Domain Entity)
+
+## 1. Canonical Definition
+
+An **Academy** is the primary institutional aggregate in the aetherbot domain that anchors structured progression, curriculum orchestration, rostered participation (humans + aetherbots), and regulated access to tournaments, training threads, and capability unlocks. It acts as both:
+
+- a governance + policy surface (eligibility, rank thresholds, roster limits), and
+- a semantic nexus tying together accounts, collections, teams, events, and evaluation artifacts.
+
+It is persisted as a first-class resource (API + ER model) and must be globally identifiable, queryable, and referentially stable across time—even if deactivated.
+
+## 2. Primary Responsibilities
+
+| Responsibility         | Description                                                                                                |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Progression Envelope   | Defines allowed rank tiers, evaluation cadence, and advancement criteria.                                  |
+| Roster Aggregation     | Owns membership enrollment of Humans (participants / administrators) and indirectly associated Aetherbots. |
+| Capability Policy      | Determines which techniques, pattern modules, or experimental features are enabled.                        |
+| Event Eligibility Gate | Filters which Teams / Individuals may register for tournaments or sanctioned events.                       |
+| Curriculum Structuring | Provides scaffolding for training sequences (threads, modules, assessments).                               |
+| Integrity & Compliance | Enforces integrity constraints: uniqueness, enrollment caps, suspension logic.                             |
+
+## 3. External Identity & Referencing
+
+| Aspect             | Rule                                                                       |
+| ------------------ | -------------------------------------------------------------------------- |
+| Global Identifier  | `academyId` (ULID or UUID v7 recommended for time-sortable introspection). |
+| Human Readable Key | Slug (immutable once published; must be unique domain-wide).               |
+| Display Name       | Mutable, versioned via name history log.                                   |
+| Status             | Enum: `ACTIVE`, `SUSPENDED`, `RETIRED`, `DEPRECATED_PLANNED`.              |
+| Visibility         | Enum: `PUBLIC`, `INVITE_ONLY`, `INTERNAL_TEST`.                            |
+
+## 4. Core Attribute Model
+
+| Field               | Type                | Cardinality | Notes / Constraints                                       |
+| ------------------- | ------------------- | ----------- | --------------------------------------------------------- |
+| academyId           | ID                  | 1           | Primary key.                                              |
+| slug                | string              | 1           | Lowercase kebab; unique index. Immutable after creation.  |
+| name                | string              | 1           | `>= 3` chars; `<= 120` chars.                             |
+| description         | markdown / richtext | 0..1        | Optional contextual narrative.                            |
+| status              | enum                | 1           | See Status set.                                           |
+| visibility          | enum                | 1           | See Visibility set.                                       |
+| createdAt           | timestamp           | 1           | System-set.                                               |
+| updatedAt           | timestamp           | 1           | System-updated.                                           |
+| deactivatedAt       | timestamp           | 0..1        | Set when status transitions to non-active terminal state. |
+| ownerAccountId      | ID(Account)         | 1           | Must reference an active Account with role >= ADMIN.      |
+| enrollmentPolicy    | JSON                | 0..1        | Structured policy (caps, rank gating, invite rules).      |
+| memberCountCache    | integer             | 1           | Maintained by trigger or async projector.                 |
+| aetherbotCountCache | integer             | 1           | Derived via roster expansion.                             |
+| rankFrameworkRef    | ID / code           | 0..1        | References standardized rank schema version.              |
+| integrityScore      | decimal(3,2)        | 0..1        | Calculated trust / compliance score (0.00–1.00).          |
+| metadata            | JSON                | 0..1        | Extensible namespaced key/values.                         |
+| version             | integer             | 1           | Optimistic concurrency control.                           |
+
+## 5. Relationship Topology
+
+| Related Entity             | Relationship Type         | Cardinality (from Academy) | Notes                                                 |
+| -------------------------- | ------------------------- | -------------------------- | ----------------------------------------------------- |
+| Account                    | Owned-by (ownerAccountId) | 1                          | Administrative ownership.                             |
+| Human                      | Enrolls                   | 0..N                       | Via membership relation (AcademyMembership).          |
+| Aetherbot                  | Indirect Association      | 0..N                       | Through Teams or Collections tied to enrolled Humans. |
+| Team                       | Hosts / Sanctions         | 0..N                       | Teams may declare Academy alignment.                  |
+| Tournament                 | Authorizes Participation  | 0..N                       | Academy may sponsor or restrict entry.                |
+| AetherbotCard              | Indirect Availability     | 0..N                       | Access gated by Academy policy layers.                |
+| Technique / Pattern Module | Enables                   | 0..N                       | Activation governed by capability policy.             |
+| IntegrityIncident          | Observes                  | 0..N                       | Logged for auditing and scoring.                      |
+| CurriculumThread           | Structures                | 0..N                       | Learning / training threads sequenced here.           |
+| AuditLogEntry              | Emits                     | 0..N                       | For state transitions & policy changes.               |
+
+## 6. Lifecycle States & Transitions
+
+State Machine (simplified):
+
+```
+DRAFT -> ACTIVE -> (SUSPENDED | RETIRED | DEPRECATED_PLANNED)
+SUSPENDED -> ACTIVE (if remediation complete)
+DEPRECATED_PLANNED -> RETIRED
+```
+
+Rules:
+
+- Creation enters `DRAFT` if critical policy fields absent; otherwise `ACTIVE`.
+- `SUSPENDED` requires reason code + optional remediation deadline.
+- `RETIRED` is terminal; no further enrollment, but references remain resolvable.
+- `DEPRECATED_PLANNED` announces future retirement; must include `targetRetirementDate` policy field.
+
+## 7. Invariants & Integrity Constraints
+
+| Constraint                                        | Rationale                                             | Enforcement Mode                          |
+| ------------------------------------------------- | ----------------------------------------------------- | ----------------------------------------- |
+| Slug immutability after publication               | Prevent link rot & stable external references         | Application + DB trigger                  |
+| Unique (name, ownerAccountId) soft-scope optional | Allow same name across owners? Decide early           | Application validation                    |
+| memberCountCache consistency                      | Prevent stale counts diverging from actual membership | Async projector + periodic reconciliation |
+| No enrollment into non-ACTIVE                     | Avoid ghost affiliations                              | Transactional guard                       |
+| Owner must retain ADMIN role                      | Prevent orphan administrative control                 | Periodic compliance job                   |
+| Integrity downgrade triggers suspension threshold | Auto-protect ecosystem                                | Domain event rule engine                  |
+
+## 8. Derived / Computed Views
+
+| Projection           | Description                                                      | Refresh Strategy                   |
+| -------------------- | ---------------------------------------------------------------- | ---------------------------------- |
+| AcademyPublicProfile | Flattened join (name, slug, rank schema, counts, integrityScore) | On-demand + cached                 |
+| EligibilityMatrix    | Precomputed gating per rank tier & capability                    | Rebuild on policy change           |
+| EnrollmentTrend      | Time-bucketed membership growth series                           | Nightly batch + incremental events |
+
+## 9. Domain Events (Emitters)
+
+| Event Name                    | Trigger                                   |
+| ----------------------------- | ----------------------------------------- |
+| AcademyCreated                | Insert committed                          |
+| AcademyActivated              | Transition DRAFT->ACTIVE                  |
+| AcademyPolicyUpdated          | enrollmentPolicy or capability set change |
+| AcademySuspended              | Status -> SUSPENDED                       |
+| AcademyReinstated             | SUSPENDED -> ACTIVE                       |
+| AcademyDeprecatedPlanned      | Status -> DEPRECATED_PLANNED              |
+| AcademyRetired                | Status -> RETIRED                         |
+| AcademyIntegrityScoreChanged  | integrityScore delta beyond threshold     |
+| AcademyEnrollmentCountChanged | membership cardinality change             |
+
+## 10. API Surface (Representative)
+
+REST-style (illustrative paths):
+
+```
+POST   /academies
+GET    /academies/{academyId}
+GET    /academies?slug=...&status=...&visibility=...
+PATCH  /academies/{academyId}
+POST   /academies/{academyId}/activate
+POST   /academies/{academyId}/suspend
+POST   /academies/{academyId}/reinstate
+POST   /academies/{academyId}/deprecate-planned
+POST   /academies/{academyId}/retire
+GET    /academies/{academyId}/members
+POST   /academies/{academyId}/members (enroll human)
+DELETE /academies/{academyId}/members/{humanId}
+GET    /academies/{academyId}/events (tournaments / curriculum-affiliated)
+```
+
+GraphQL (if adopted) typical root fields:
+
+```
+academy(id: ID!): Academy
+academies(filter: AcademyFilter, paging: PagingInput): AcademyConnection
+mutateAcademy(input: AcademyMutation!): AcademyMutationResult
+```
+
+## 11. Query Patterns & Indexing
+
+| Query                          | Index Recommendation                      |
+| ------------------------------ | ----------------------------------------- |
+| Lookup by slug                 | Unique index on slug                      |
+| Filter by (status, visibility) | Composite (status, visibility, academyId) |
+| Top N by integrityScore        | BTree or partial index (status=ACTIVE)    |
+| Enrollment growth analytics    | Time-series table or separate fact store  |
+
+## 12. Security & Access Control
+
+- Write operations restricted to Owner or delegated ADMIN roles with scoped capability.
+- Suspension / Retirement actions require elevated audit context (reason code + actorId + timestamp).
+- Enrollment operations must check both Academy status and target Human account status.
+
+## 13. Observability
+
+- Emit structured audit log entries with correlationId & causationId for every status transition.
+- IntegrityScore recalculations should include contributing factor vector for explainability.
+- Enrollment churn metrics (joins, leaves) aggregated hourly.
+
+## 14. Open Questions / Future Refinements
+
+| Area                      | Question                                                                          |
+| ------------------------- | --------------------------------------------------------------------------------- |
+| Policy Versioning         | Do we snapshot full enrollmentPolicy per change for historical replay?            |
+| Membership Roles          | Should we formalize role taxonomy beyond (MEMBER, ADMIN)?                         |
+| IntegrityScore Inputs     | Source weighting (incident severity vs. growth volatility)?                       |
+| Multi-Academy Affiliation | Allow a Human to belong to multiple simultaneously? If yes, gating conflicts?     |
+| Curriculum Coupling       | Separate service boundary for training threads vs inline under Academy aggregate? |
+
+---
+
+This page defines the Academy entity within the persistent aetherbot domain. Once template patterns are confirmed, equivalent documentation will be generated for the remaining core entities.

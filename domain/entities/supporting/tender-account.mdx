@@ -1,0 +1,84 @@
+---
+Title: "Supporting: CurrencyAccount Entity"
+slug: domain/entities/supporting/currency-account
+summary: Balance-holding ledger account linking a collector to a specific Currency (formerly Tender) instance.
+status: experimental
+lastUpdated: 2025-09-24
+stability: experimental
+tags: [supporting-entity, economy, balance]
+---
+
+> Migration Note: Formerly named "TenderAccount". Renamed for alignment with API surface (CurrencyAccounts).
+
+# CurrencyAccount (Supporting Entity)
+
+## 1. Canonical Definition
+
+A **CurrencyAccount** stores units of a specific Currency for a collector (or participant proxy) including available balance and reserved funds (pending transactions / holds).
+
+## 2. Responsibilities
+
+| Responsibility     | Description                                      |
+| ------------------ | ------------------------------------------------ |
+| Balance Storage    | Persist current and reserved balances.           |
+| Transaction Anchor | Acts as posting target/source in economic flows. |
+| Activity Trace     | Last transactional activity timestamping.        |
+
+## 3. Identity & Referencing
+
+| Aspect     | Rule                                                 |
+| ---------- | ---------------------------------------------------- |
+| Identifier | `currencyAccountId`.                                 |
+| Links      | `collectorId`, `currencyId`.                         |
+| Status     | Implicit (active until archival pattern introduced). |
+
+## 4. Core Attributes
+
+| Field             | Type              | Notes                      |
+| ----------------- | ----------------- | -------------------------- |
+| currencyAccountId | ID                | PK.                        |
+| collectorId       | ID(CardCollector) | Owner link.                |
+| currencyId        | ID(Currency)      | Currency link.             |
+| balance           | number            | Spendable units.           |
+| reservedBalance   | number            | Held units (pending).      |
+| lastTransactionAt | timestamp         | Nullable; set on postings. |
+| createdAt         | timestamp         | Creation.                  |
+| updatedAt         | timestamp         | Modification.              |
+
+## 5. Invariants
+
+| Constraint                   | Reason                                    |
+| ---------------------------- | ----------------------------------------- |
+| balance >= 0                 | No negative spend without overdraft model |
+| reservedBalance >= 0         | Prevent corruption                        |
+| reservedBalance `<=` balance | Maintain accounting correctness           |
+
+## 6. Domain Events
+
+| Event                          | Trigger               |
+| ------------------------------ | --------------------- |
+| CurrencyAccountCreated         | Insert                |
+| CurrencyAccountBalanceChanged  | balance delta         |
+| CurrencyAccountReservedChanged | reservedBalance delta |
+
+## 7. API (Representative)
+
+```
+GET    /currency-accounts/{currencyAccountId}
+GET    /currency-accounts?collectorId=...&currencyId=...
+POST   /currency-accounts/{currencyAccountId}/reserve
+POST   /currency-accounts/{currencyAccountId}/release
+POST   /currency-accounts/{currencyAccountId}/adjust
+```
+
+## 8. Open Questions
+
+| Area               | Question                                     |
+| ------------------ | -------------------------------------------- |
+| Ledger Abstraction | Introduce double-entry postings?             |
+| Archival           | Should inactive zero-balance accounts purge? |
+| Fraud Detection    | Balance velocity anomaly thresholds?         |
+
+---
+
+This page defines the CurrencyAccount supporting entity in the persistent aetherbot domain.

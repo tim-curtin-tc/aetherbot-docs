@@ -1,0 +1,133 @@
+---
+Title: "Core: Team Entity"
+slug: domain/entities/team
+summary: Coordinated multi-participant competitive unit aggregating Humans and Aetherbots with roster governance in the aetherbot domain.
+status: experimental
+lastUpdated: 2025-09-24
+stability: experimental
+tags: [core-entity, competition, aggregation]
+---
+
+# Team (Core Domain Entity)
+
+## 1. Canonical Definition
+
+A **Team** is a structured aggregation of Humans (participants) and their configured Aetherbots operating as a competitive unit in events or tournaments. It encapsulates roster constraints, affiliation metadata (e.g., Academy alignment), and coordination identifiers (captain, strategy notes). Teams may be ephemeral (event-specific) or persistent.
+
+## 2. Primary Responsibilities
+
+| Responsibility        | Description                                           |
+| --------------------- | ----------------------------------------------------- |
+| Roster Aggregation    | Manages member Humans and assigned Aetherbots.        |
+| Eligibility Interface | Validates roster compliance vs tournament rules.      |
+| Affiliation Metadata  | Associates optional Academy alignment or sponsorship. |
+| Leadership & Roles    | Tracks captain or strategic role assignments.         |
+| Competitive History   | Records match/tournament participation results.       |
+
+## 3. Identity & Referencing
+
+| Aspect            | Rule                                                   |
+| ----------------- | ------------------------------------------------------ |
+| Global Identifier | `teamId`.                                              |
+| Slug              | Unique, immutable on publication.                      |
+| Name              | Mutable but uniqueness per scope (global or academy?). |
+| Status            | `ACTIVE`, `LOCKED`, `RETIRED`.                         |
+| Visibility        | `PUBLIC`, `PRIVATE`, `UNLISTED`.                       |
+
+## 4. Core Attribute Model
+
+| Field          | Type        | Card | Notes                                      |
+| -------------- | ----------- | ---- | ------------------------------------------ |
+| teamId         | ID          | 1    | PK.                                        |
+| name           | string      | 1    | Policy: uniqueness strategy TBD.           |
+| slug           | string      | 1    | Stable reference.                          |
+| academyId      | ID(Academy) | 0..1 | Optional affiliation.                      |
+| status         | enum        | 1    | See Status set.                            |
+| visibility     | enum        | 1    | Governs discovery.                         |
+| captainHumanId | ID(Human)   | 0..1 | Must be active member.                     |
+| rosterPolicy   | JSON        | 0..1 | Size caps, role distribution requirements. |
+| strategyNotes  | richtext    | 0..1 | Optional planning space.                   |
+| integrityFlags | JSON        | 0..1 | Compliance review markers.                 |
+| metadata       | JSON        | 0..1 | Extensible.                                |
+| createdAt      | timestamp   | 1    | System set.                                |
+| updatedAt      | timestamp   | 1    | System update.                             |
+| retiredAt      | timestamp   | 0..1 | Archive marker.                            |
+| version        | int         | 1    | OCC.                                       |
+
+## 5. Relationship Topology
+
+| Related Entity    | Type            | Cardinality (from Team) | Notes                        |
+| ----------------- | --------------- | ----------------------- | ---------------------------- |
+| Human             | Members         | 0..N                    | Via team membership pivot.   |
+| Aetherbot         | Assigned Units  | 0..N                    | Rostered bots.               |
+| Academy           | Affiliated-with | 0..1                    | Optional.                    |
+| Tournament        | Participates    | 0..N                    | Registration entries.        |
+| Match (future)    | Competes-in     | 0..N                    | If modeled separately.       |
+| AuditLogEntry     | Emits           | 0..N                    | Roster, status changes.      |
+| IntegrityIncident | Subject         | 0..N                    | Eligibility or fraud issues. |
+
+## 6. Lifecycle & Status
+
+- `ACTIVE`: Normal operations & registrations allowed.
+- `LOCKED`: Temporarily frozen (roster change prohibition during event window).
+- `RETIRED`: Archived; roster immutable.
+
+## 7. Invariants & Constraints
+
+| Constraint                           | Rationale                           | Enforcement                    |
+| ------------------------------------ | ----------------------------------- | ------------------------------ |
+| captainHumanId must be active member | Prevent invalid leadership pointers | Transactional guard            |
+| Roster size within policy caps       | Competitive balance                 | Validator on mutation          |
+| No roster edits while LOCKED         | Event integrity                     | Status guard                   |
+| Unique (name, academyId?) if scoped  | Avoid confusion                     | DB constraint (scope decision) |
+
+## 8. Domain Events
+
+| Event              | Trigger                       |
+| ------------------ | ----------------------------- |
+| TeamCreated        | Insert                        |
+| TeamStatusChanged  | status mutation               |
+| TeamRosterUpdated  | Membership delta (add/remove) |
+| TeamCaptainChanged | captainHumanId mutation       |
+| TeamLocked         | status -> LOCKED              |
+| TeamRetired        | status -> RETIRED             |
+
+## 9. API Surface (Representative)
+
+```
+POST   /teams
+GET    /teams/{teamId}
+GET    /teams?academyId=...&status=...
+PATCH  /teams/{teamId}
+POST   /teams/{teamId}/lock
+POST   /teams/{teamId}/retire
+POST   /teams/{teamId}/members (add)
+DELETE /teams/{teamId}/members/{humanId}
+```
+
+## 10. Indexing & Query Patterns
+
+| Query                         | Index                        |
+| ----------------------------- | ---------------------------- |
+| Lookup by slug                | Unique(slug)                 |
+| Filter by academy affiliation | (academyId, status)          |
+| Active roster expansion       | (teamId) -> membership table |
+| Locked teams scan             | (status) partial LOCKED      |
+
+## 11. Observability & Integrity
+
+- Track roster churn rate vs event windows.
+- Alert on repeated LOCK/UNLOCK thrashing patterns.
+- Record reason codes for LOCK transitions.
+
+## 12. Open Questions
+
+| Area                             | Question                        |
+| -------------------------------- | ------------------------------- |
+| Name uniqueness scope            | Global vs per Academy?          |
+| Multi-captain / leadership roles | Support co-captains?            |
+| Roster role taxonomy             | Enforce role slot distribution? |
+
+---
+
+This page defines the Team entity within the persistent aetherbot domain.

@@ -1,0 +1,83 @@
+---
+Title: "Supporting: Sage Entity"
+slug: domain/entities/supporting/sage
+summary: System or human-curated knowledge persona providing contextual guidance & narrative infusions.
+status: experimental
+lastUpdated: 2025-09-24
+stability: experimental
+tags: [supporting-entity, knowledge, guidance]
+---
+
+# Sage (Supporting Entity)
+
+## 1. Canonical Definition
+
+A **Sage** represents a curated knowledge persona (system-managed or human-influenced) that can respond to contextual queries, inject narrative hints, or shape onboarding sequences within the platform.
+
+## 2. Responsibilities
+
+| Responsibility     | Description                                                 |
+| ------------------ | ----------------------------------------------------------- |
+| Persona Definition | Name, domain focus, tone guidance.                          |
+| Knowledge Binding  | Points to content corpora / embeddings.                     |
+| Interaction Policy | Rate limits, session scope, disclaimers.                    |
+| Event Injection    | Supplies narrative or hints during gameplay or exploration. |
+
+## 3. Identity & Referencing
+
+| Aspect      | Rule                                         |
+| ----------- | -------------------------------------------- |
+| Identifier  | `sageId`.                                    |
+| Persona Key | Unique slug / handle for stable referencing. |
+
+## 4. Core Attributes
+
+| Field              | Type            | Notes                    |
+| ------------------ | --------------- | ------------------------ |
+| sageId             | ID              | PK.                      |
+| handle             | string          | Unique persona handle.   |
+| displayName        | string          | Presentation name.       |
+| description        | string          | Short summary.           |
+| domainFocus        | `array<string>` | Thematic areas.          |
+| embeddingCorpusRef | string          | Knowledge index pointer. |
+| active             | boolean         | Availability toggle.     |
+| createdDateTime    | timestamp       | Creation.                |
+| updatedDateTime    | timestamp       | Last update.             |
+
+## 5. Invariants
+
+| Constraint                                 | Reason              |
+| ------------------------------------------ | ------------------- |
+| handle immutable post creation             | External references |
+| Disabled (active=false) blocks interaction | Policy enforcement  |
+
+## 6. Domain Events
+
+| Event           | Trigger                |
+| --------------- | ---------------------- |
+| SageCreated     | Insert                 |
+| SageUpdated     | Attribute modification |
+| SageDeactivated | active -> false        |
+| SageReactivated | active -> true         |
+
+## 7. API (Representative)
+
+```
+POST   /sages
+GET    /sages/{id}
+GET    /sages?active=true
+POST   /sages/{id}/deactivate
+POST   /sages/{id}/reactivate
+```
+
+## 8. Open Questions
+
+| Area                 | Question                                        |
+| -------------------- | ----------------------------------------------- |
+| Multi-Model Strategy | Per-sage model override?                        |
+| Feedback Loop        | Reinforcement or rating capture?                |
+| Safety Layer         | Central moderation pipeline vs per-sage config? |
+
+---
+
+This page defines the Sage supporting entity in the persistent aetherbot domain.

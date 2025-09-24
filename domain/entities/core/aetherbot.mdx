@@ -1,0 +1,146 @@
+---
+Title: "Core: Aetherbot Entity"
+slug: domain/entities/aetherbot
+summary: Core programmable combat / interaction agent unit with progression, capability loadout, and stewardship surfaces in the aetherbot domain.
+status: experimental
+lastUpdated: 2025-09-24
+stability: experimental
+tags: [core-entity, asset, agent]
+---
+
+# Aetherbot (Core Domain Entity)
+
+## 1. Canonical Definition
+
+An **Aetherbot** is a persistent autonomous (or semi-autonomous) agent entity representing a configurable combat / interaction unit. It binds together capability modules (techniques, pattern adapters), progression attributes, loadout state, and operational constraints. Ownership vs operational stewardship may diverge (Account owns, Human operates).
+
+## 2. Primary Responsibilities
+
+| Responsibility          | Description                                           |
+| ----------------------- | ----------------------------------------------------- |
+| Capability Composition  | Aggregates equipped techniques / pattern modules.     |
+| Progression Tracking    | Maintains rank, experience, specialization vectors.   |
+| Operational Constraints | Tracks fatigue, cooldown states, repair requirements. |
+| Stewardship Interface   | Exposes assignment to a Human operator.               |
+| Integrity Surface       | Monitors anomalous performance / exploit flags.       |
+
+## 3. Identity & Referencing
+
+| Aspect            | Rule                                            |
+| ----------------- | ----------------------------------------------- |
+| Global Identifier | `aetherbotId`.                                  |
+| Ownership         | `ownerAccountId` required.                      |
+| Operator          | Optional `operatorHumanId` (must be ACTIVE).    |
+| Status            | `ACTIVE`, `DISABLED`, `RETIRED`, `QUARANTINED`. |
+| Visibility        | `PUBLIC`, `PRIVATE`, `UNLISTED`.                |
+
+## 4. Core Attribute Model
+
+| Field                | Type         | Card | Notes                                     |
+| -------------------- | ------------ | ---- | ----------------------------------------- |
+| aetherbotId          | ID           | 1    | PK.                                       |
+| ownerAccountId       | ID(Account)  | 1    | FK.                                       |
+| operatorHumanId      | ID(Human)    | 0..1 | Nullable; cleared if Human banned.        |
+| name                 | string       | 1    | Unique per owner; sanitized.              |
+| codename             | string       | 0..1 | Optional flair; non-unique.               |
+| description          | richtext     | 0..1 | Flavor + tactical notes.                  |
+| status               | enum         | 1    | See Status set.                           |
+| visibility           | enum         | 1    | Controls discovery.                       |
+| rank                 | string       | 0..1 | Shared schema with Human/Academy context. |
+| experience           | bigint       | 1    | Monotonic non-negative.                   |
+| specializationVector | JSON         | 0..1 | Build metrics.                            |
+| equippedTechniques   | JSON         | 0..1 | Ordered list with slots.                  |
+| patternModuleRefs    | JSON         | 0..1 | Additional adaptation modules.            |
+| fatigueScore         | decimal(4,2) | 0..1 | 0.00–1.00 (higher = more fatigued).       |
+| integrityFlags       | JSON         | 0..1 | Quarantine triggers.                      |
+| metadata             | JSON         | 0..1 | Extensible.                               |
+| createdAt            | timestamp    | 1    | System set.                               |
+| updatedAt            | timestamp    | 1    | System update.                            |
+| retiredAt            | timestamp    | 0..1 | Terminal time.                            |
+| version              | int          | 1    | OCC.                                      |
+
+## 5. Relationship Topology
+
+| Related Entity    | Type              | Cardinality (from Aetherbot) | Notes                                    |
+| ----------------- | ----------------- | ---------------------------- | ---------------------------------------- |
+| Account           | Owned-by          | 1                            | Custodial control.                       |
+| Human             | Operated-by       | 0..1                         | Operator assignment.                     |
+| AetherbotCard     | Instantiated-from | 0..1                         | If card serves as blueprint / licensing. |
+| Team              | Assigned-to       | 0..N                         | If teams list rostered bots.             |
+| Tournament        | Participates      | 0..N                         | Via registration composition.            |
+| Technique         | Equips            | 0..N                         | Through equippedTechniques.              |
+| Pattern Module    | Integrates        | 0..N                         | patternModuleRefs.                       |
+| IntegrityIncident | Subject           | 0..N                         | Quarantine decisions.                    |
+| AuditLogEntry     | Emits             | 0..N                         | Status, operator, loadout changes.       |
+
+## 6. Lifecycle & Status
+
+- `ACTIVE`: Eligible for events & loadout changes.
+- `DISABLED`: Temporarily unusable (repair, policy violation under review).
+- `QUARANTINED`: Isolated due to exploit suspicion; cannot participate.
+- `RETIRED`: Permanently archived; immutable progression thereafter.
+
+## 7. Invariants & Constraints
+
+| Constraint                                             | Rationale                      | Enforcement            |
+| ------------------------------------------------------ | ------------------------------ | ---------------------- |
+| experience monotonic                                   | Preserve progression integrity | DB constraint or check |
+| operatorHumanId must be ACTIVE                         | Avoid ghost operators          | Application guard      |
+| No event participation if DISABLED/QUARANTINED         | Fairness                       | Registration validator |
+| Unique name per ownerAccountId                         | UX clarity                     | Composite unique index |
+| Equipped techniques respect slot & compatibility rules | Balance & integrity            | Domain validator       |
+
+## 8. Domain Events
+
+| Event                        | Trigger                               |
+| ---------------------------- | ------------------------------------- |
+| AetherbotCreated             | Insert                                |
+| AetherbotStatusChanged       | status mutation                       |
+| AetherbotOperatorAssigned    | operatorHumanId set                   |
+| AetherbotOperatorCleared     | operatorHumanId cleared               |
+| AetherbotLoadoutUpdated      | equippedTechniques change             |
+| AetherbotRankChanged         | rank delta                            |
+| AetherbotExperienceIncreased | experience increment beyond threshold |
+| AetherbotQuarantined         | status -> QUARANTINED                 |
+| AetherbotRetired             | status -> RETIRED                     |
+
+## 9. API Surface (Representative)
+
+```
+POST   /aetherbots
+GET    /aetherbots/{aetherbotId}
+GET    /aetherbots?ownerAccountId=...&status=...
+PATCH  /aetherbots/{aetherbotId}
+POST   /aetherbots/{aetherbotId}/assign-operator
+POST   /aetherbots/{aetherbotId}/clear-operator
+POST   /aetherbots/{aetherbotId}/quarantine
+POST   /aetherbots/{aetherbotId}/reinstate
+POST   /aetherbots/{aetherbotId}/retire
+```
+
+## 10. Indexing & Query Patterns
+
+| Query                      | Index                               |
+| -------------------------- | ----------------------------------- |
+| Owner inventory            | (ownerAccountId, aetherbotId)       |
+| Operator assignment lookup | (operatorHumanId, status)           |
+| Quarantine review queue    | (status) partial status=QUARANTINED |
+| Rank leaderboard           | (rank, experience DESC)             |
+
+## 11. Observability & Integrity
+
+- Log anomalous loadout swaps within short windows.
+- Track average fatigue decay curves for tuning.
+- Attach provenance to specializationVector recalculations.
+
+## 12. Open Questions
+
+| Area                | Question                                                               |
+| ------------------- | ---------------------------------------------------------------------- |
+| Blueprint linkage   | Do all Aetherbots derive from a Card blueprint? Mandatory vs optional? |
+| Operator incentives | Progression XP split between Human and Aetherbot?                      |
+| Loadout versioning  | Snapshot technique set for historical match replays?                   |
+
+---
+
+This page defines the Aetherbot entity within the persistent aetherbot domain.

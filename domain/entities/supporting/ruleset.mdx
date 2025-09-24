@@ -1,0 +1,85 @@
+---
+Title: "Supporting: RuleSet Entity"
+slug: domain/entities/supporting/ruleset
+summary: Versioned policy container defining competitive, economic, or operational constraints at varying scopes.
+status: experimental
+lastUpdated: 2025-09-24
+stability: experimental
+tags: [supporting-entity, policy, versioning]
+---
+
+# RuleSet (Supporting Entity)
+
+## 1. Canonical Definition
+
+A **RuleSet** encapsulates structured policy (JSON) governing interactions (battle constraints, economic rules, participation limits) applied at a defined scope (GLOBAL, ACADEMY, STORE, STATION). It may supersede or override lower-precedence layers.
+
+## 2. Responsibilities
+
+| Responsibility        | Description                                        |
+| --------------------- | -------------------------------------------------- |
+| Policy Definition     | Stores machine-validated rules payload.            |
+| Scope Binding         | Constrains applicability to a defined boundary.    |
+| Version Progression   | Enables controlled evolution across releases.      |
+| Precedence Resolution | Participates in overlay logic with other RuleSets. |
+
+## 3. Identity & Referencing
+
+| Aspect     | Rule                                         |
+| ---------- | -------------------------------------------- |
+| Identifier | `ruleSetId` UUID.                            |
+| Name       | Human-readable label.                        |
+| version    | Integer monotonic per (name, scope) lineage. |
+| Status     | `ACTIVE`, `INACTIVE`, `DEPRECATED`.          |
+
+## 4. Core Attributes
+
+| Field         | Type      | Notes                        |
+| ------------- | --------- | ---------------------------- | ------- | ----- | -------- |
+| ruleSetId     | ID        | Primary key.                 |
+| name          | string    | Logical grouping.            |
+| scope         | enum      | GLOBAL                       | ACADEMY | STORE | STATION. |
+| version       | integer   | Monotonic.                   |
+| status        | enum      | Lifecycle state.             |
+| data          | object    | Validated structured policy. |
+| effectiveFrom | timestamp | Optional start boundary.     |
+| effectiveTo   | timestamp | Optional end boundary.       |
+| createdAt     | timestamp | Creation time.               |
+| updatedAt     | timestamp | Last modification.           |
+
+## 5. Lifecycle & Invariants
+
+- Only one ACTIVE version per (name, scope) at a time.
+- `effectiveFrom` < `effectiveTo` when both present.
+- DEPRECATED implies scheduled retirement or replaced successor.
+
+## 6. Domain Events
+
+| Event             | Trigger                       |
+| ----------------- | ----------------------------- |
+| RuleSetCreated    | Insert                        |
+| RuleSetActivated  | status -> ACTIVE              |
+| RuleSetDeprecated | status -> DEPRECATED          |
+| RuleSetRetired    | status -> INACTIVE (terminal) |
+
+## 7. API (Representative)
+
+```
+POST   /rulesets
+GET    /rulesets/{ruleSetId}
+GET    /rulesets?scope=...&status=...
+POST   /rulesets/{ruleSetId}/activate
+POST   /rulesets/{ruleSetId}/deprecate
+```
+
+## 8. Open Questions
+
+| Area              | Question                                    |
+| ----------------- | ------------------------------------------- |
+| Diffing           | Provide structured diff endpoints?          |
+| Partial Overrides | Support patch layering vs full replacement? |
+| Validation        | Central schema registry or embedded refs?   |
+
+---
+
+This page defines the RuleSet supporting entity in the persistent aetherbot domain.

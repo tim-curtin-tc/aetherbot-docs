@@ -1,0 +1,88 @@
+---
+Title: "Supporting: Trade Entity"
+slug: domain/entities/supporting/trade
+summary: Bilateral asset exchange proposal with lifecycle from creation through acceptance or termination.
+status: experimental
+lastUpdated: 2025-09-24
+stability: experimental
+tags: [supporting-entity, exchange, lifecycle]
+---
+
+# Trade (Supporting Entity)
+
+## 1. Canonical Definition
+
+A **Trade** represents a bilateral proposal between two collectors enumerating offered and requested card assets, with temporal validity, status transitions, and optional expiration logic.
+
+## 2. Responsibilities
+
+| Responsibility       | Description                                                            |
+| -------------------- | ---------------------------------------------------------------------- |
+| Offer Representation | Lists offered vs requested card sets.                                  |
+| Lifecycle Control    | Status machine (PENDING -> ACCEPTED / DECLINED / CANCELLED / SETTLED). |
+| Expiry Handling      | Optional expiry timestamp triggers auto-cancel.                        |
+| Integrity Safeguards | Ensures asset still owned & unlocked at settlement.                    |
+
+## 3. Identity & Referencing
+
+| Aspect       | Rule                                                       |
+| ------------ | ---------------------------------------------------------- |
+| Identifier   | `tradeId`.                                                 |
+| Participants | fromCollectorId, toCollectorId.                            |
+| Status       | `PENDING`, `ACCEPTED`, `DECLINED`, `CANCELLED`, `SETTLED`. |
+
+## 4. Core Attributes
+
+| Field            | Type              | Notes                     |
+| ---------------- | ----------------- | ------------------------- |
+| tradeId          | ID                | PK.                       |
+| fromCollectorId  | ID(CardCollector) | Initiator.                |
+| toCollectorId    | ID(CardCollector) | Counterparty.             |
+| offeredCardIds   | `array<string>`   | Proposed outbound assets. |
+| requestedCardIds | `array<string>`   | Desired inbound assets.   |
+| createdDateTime  | timestamp         | Creation.                 |
+| expiresAt        | timestamp         | Nullable expiry.          |
+| status           | enum              | Lifecycle state.          |
+| updatedAt        | timestamp         | Last state change.        |
+
+## 5. Invariants
+
+| Constraint                                     | Reason                |
+| ---------------------------------------------- | --------------------- |
+| Cannot ACCEPT after expiry                     | Integrity             |
+| Cannot mutate card lists post PENDING->(other) | Transaction integrity |
+| Settlement requires ownership validation       | Prevent stale offers  |
+
+## 6. Domain Events
+
+| Event          | Trigger                    |
+| -------------- | -------------------------- |
+| TradeCreated   | Insert                     |
+| TradeAccepted  | status -> ACCEPTED         |
+| TradeDeclined  | status -> DECLINED         |
+| TradeCancelled | status -> CANCELLED        |
+| TradeSettled   | Settlement batch operation |
+| TradeExpired   | System detected expiry     |
+
+## 7. API (Representative)
+
+```
+POST   /trades
+GET    /trades/{tradeId}
+GET    /trades?participant=...&status=...
+POST   /trades/{tradeId}/accept
+POST   /trades/{tradeId}/decline
+POST   /trades/{tradeId}/cancel
+```
+
+## 8. Open Questions
+
+| Area               | Question                                            |
+| ------------------ | --------------------------------------------------- |
+| Partial Settlement | Allow partial acceptance?                           |
+| Counter Offers     | New entity vs mutation with version bump?           |
+| Escrow             | Need intermediate lock before final ownership swap? |
+
+---
+
+This page defines the Trade supporting entity in the persistent aetherbot domain.

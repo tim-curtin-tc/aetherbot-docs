@@ -1,0 +1,86 @@
+---
+Title: "Supporting: AllowancePlan Entity"
+slug: domain/entities/supporting/allowance-plan
+summary: Scheduled credit issuance program allocating recurring tender or resource allowances to collectors.
+status: experimental
+lastUpdated: 2025-09-24
+stability: experimental
+tags: [supporting-entity, economy, schedule]
+---
+
+# AllowancePlan (Supporting Entity)
+
+## 1. Canonical Definition
+
+An **AllowancePlan** emits periodic credit allocations (nutrition, energy, focus, or generic resource categories) to enrolled participants over a defined cycle (DAILY, WEEKLY, SEASON) within an Academy.
+
+## 2. Responsibilities
+
+| Responsibility            | Description                                |
+| ------------------------- | ------------------------------------------ |
+| Cycle Scheduling          | Defines issuance cadence & cycle type.     |
+| Credit Allocation         | Specifies amount and resource type.        |
+| Enrollment Anchor         | Supports AllowanceEnrollments association. |
+| Status & Temporal Control | Start/end boundaries for activation.       |
+
+## 3. Identity & Referencing
+
+| Aspect     | Rule                  |
+| ---------- | --------------------- |
+| Identifier | `allowancePlanId`.    |
+| Scope      | Academy.              |
+| Status     | `ACTIVE`, `INACTIVE`. |
+
+## 4. Core Attributes
+
+| Field           | Type        | Notes                                |
+| --------------- | ----------- | ------------------------------------ | -------- | --------- |
+| allowancePlanId | ID          | PK.                                  |
+| academyId       | ID(Academy) | Required.                            |
+| name            | string      | Plan label.                          |
+| cycle           | enum        | `DAILY`                              | `WEEKLY` | `SEASON`. |
+| creditAmount    | number      | Amount per issuance.                 |
+| type            | enum        | Category (NUTRITION, ENERGY, FOCUS). |
+| status          | enum        | Lifecycle.                           |
+| startDate       | date        | Start boundary.                      |
+| endDate         | date        | Optional termination.                |
+| createdAt       | timestamp   | Creation.                            |
+| updatedAt       | timestamp   | Modification.                        |
+
+## 5. Invariants
+
+| Constraint                       | Reason                |
+| -------------------------------- | --------------------- |
+| startDate < endDate (if present) | Temporal ordering     |
+| ACTIVE only within range         | Lifecycle correctness |
+
+## 6. Domain Events
+
+| Event                      | Trigger                  |
+| -------------------------- | ------------------------ |
+| AllowancePlanCreated       | Insert                   |
+| AllowancePlanActivated     | status -> ACTIVE         |
+| AllowancePlanDeactivated   | status -> INACTIVE       |
+| AllowancePlanCycleExecuted | Issuance batch processed |
+
+## 7. API (Representative)
+
+```
+POST   /allowance-plans
+GET    /allowance-plans/{allowancePlanId}
+GET    /allowance-plans?academyId=...&status=...
+PATCH  /allowance-plans/{allowancePlanId}
+POST   /allowance-plans/{allowancePlanId}/execute (manual trigger)
+```
+
+## 8. Open Questions
+
+| Area           | Question                           |
+| -------------- | ---------------------------------- |
+| Rollover       | Unused credit accumulation?        |
+| Variable Cycle | Support custom cron-like cycles?   |
+| Proration      | Handle mid-cycle enrollment joins? |
+
+---
+
+This page defines the AllowancePlan supporting entity in the persistent aetherbot domain.

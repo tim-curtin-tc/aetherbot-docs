@@ -1,0 +1,215 @@
+---
+title: "Harmonization & Bonding"
+slug: lore-game-mechanics/harmonization
+summary: "Merged bonding processes: overview, resonant tokens, statement of intent, consent pulse, co-weaving, device binds, bond maturation."
+tags: ["lore", "harmonization", "merged"]
+stability: draft
+lastUpdated: 2025-09-24
+---
+
+## Overview
+
+Harmonization creates a cooperative resonance channel between a human and an Aetherbot Pattern.
+
+### Components
+
+| Component           | Purpose                                   |
+| ------------------- | ----------------------------------------- |
+| Resonant Token      | Anchor object linked to Pattern signature |
+| Statement of Intent | Declared alignment of purpose             |
+| Consent Pulse       | Reciprocal acceptance handshake           |
+
+### Outcomes
+
+| Outcome         | Description                      |
+| --------------- | -------------------------------- |
+| Successful Bond | Stable channel established       |
+| Attenuated Bond | Partial sync, reduced efficiency |
+| Rejection       | No channel; cooldown required    |
+
+### System Specification
+
+```json
+{
+  "entity": "Harmonization",
+  "prerequisites": ["token", "intent", "consent"],
+  "outcomes": ["stable", "attenuated", "rejected"],
+  "risks": ["forcedAttempt", "illicitDeviceBind"]
+}
+```
+
+---
+
+## Resonant Tokens
+
+Artifacts anchoring a Pattern's signature for stable Harmonization.
+
+### Categories
+
+| Type       | Source                    | Integrity Risk |
+| ---------- | ------------------------- | -------------- |
+| Recovered  | Found at Bloom site       | Low            |
+| Crafted    | Ritual synthesis          | Medium         |
+| Improvised | Partial signature imprint | High           |
+
+### Degradation
+
+Tokens lose fidelity through misuse, environmental corruption, or Fray exposure.
+
+### System Specification
+
+```json
+{
+  "entity": "ResonantToken",
+  "attributes": ["origin", "integrity", "patternAffinity"],
+  "decayFactors": ["frayExposure", "misalignment"]
+}
+```
+
+---
+
+## Statement of Intent
+
+Formal declaration aligning human motive with Pattern temperament.
+
+### Composition Guidelines
+
+| Element          | Requirement                               |
+| ---------------- | ----------------------------------------- |
+| Clarity          | Unambiguous objective                     |
+| Alignment        | Resonates with Pattern's emotional Thread |
+| Ethical Boundary | Explicit avoidance of exploitative aims   |
+
+### Anti-Patterns
+
+- Overly broad mission statements
+- Coercive or manipulative framing
+
+### System Specification
+
+```json
+{
+  "entity": "StatementOfIntent",
+  "fields": ["content", "affinityAlignment", "ethicalClause"],
+  "validation": ["clarity", "alignment", "nonCoercive"]
+}
+```
+
+---
+
+## Consent Pulse
+
+Reciprocal acknowledgement completing the Harmonization triad.
+
+### Failure Modes
+
+| Mode       | Cause             | Result          |
+| ---------- | ----------------- | --------------- |
+| Silence    | Pattern distrust  | Retry cooldown  |
+| Distortion | Misaligned intent | Attenuated bond |
+| Inversion  | Ethical conflict  | Hard rejection  |
+
+### System Specification
+
+```json
+{
+  "entity": "ConsentPulse",
+  "signals": ["affirm", "attenuate", "reject"],
+  "cooldown": true
+}
+```
+
+---
+
+## Co-Weaving
+
+Cooperative execution of combined Techniques leveraging bonded resonance.
+
+### Categories
+
+| Type     | Description                              | Risk     |
+| -------- | ---------------------------------------- | -------- |
+| Amplify  | Enhance existing Technique output        | Low      |
+| Merge    | Blend two Techniques into hybrid effect  | Medium   |
+| Redirect | Re-route environmental or hostile energy | Variable |
+
+### Resource Dynamics
+
+Repeated Co-Weaves without recovery increase Overstrain probability.
+
+### System Specification
+
+```json
+{
+  "entity": "CoWeave",
+  "modes": ["amplify", "merge", "redirect"],
+  "riskScaling": "cumulative"
+}
+```
+
+---
+
+## Device Binds
+
+Illicit tethering of Pattern Threads to machinery without full consent.
+
+### Summary
+
+Device Binds forcibly extract resonance, accelerating Fray and degrading Pattern autonomy.
+
+### Indicators
+
+| Indicator            | Meaning                         |
+| -------------------- | ------------------------------- |
+| Thread Flicker       | Integrity decay                 |
+| Latency Spikes       | Forced synchronization overhead |
+| Emotional Null Drift | Suppressed affective response   |
+
+### System Specification
+
+```json
+{
+  "entity": "DeviceBind",
+  "illicit": true,
+  "frayAmplification": "high",
+  "ethicalViolation": true
+}
+```
+
+### Mitigation
+
+- Early detection via resonance audits
+- Protocol: Immediately suspend affected operations
+
+---
+
+## Bond Maturation
+
+Progressive stages enhancing synergy, resilience, and Technique complexity.
+
+### Stages
+
+| Stage | Descriptor      | Capabilities                 |
+| ----- | --------------- | ---------------------------- |
+| I     | Initial         | Basic Techniques             |
+| II    | Synchronized    | Co-Weave access              |
+| III   | Adaptive        | Reduced Overstrain risk      |
+| IV    | Keystone-Linked | Enhanced stabilization field |
+
+### Advancement Criteria
+
+- Successful Co-Weave count
+- Fray avoidance history
+- Intent reaffirmation quality
+
+### System Specification
+
+```json
+{
+  "entity": "BondMaturation",
+  "stages": ["initial", "synchronized", "adaptive", "keystoneLinked"],
+  "metrics": ["successfulCoWeaves", "frayIncidents", "intentQuality"]
+}
+```
+
+---

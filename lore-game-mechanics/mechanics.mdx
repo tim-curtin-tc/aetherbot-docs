@@ -1,0 +1,200 @@
+---
+title: "Mechanics & System Spec"
+slug: lore-game-mechanics/mechanics
+summary: "Merged mechanics: overview, stats, status effects, techniques & weaves, fray escalation, environmental zones, progression & scaling, failure states."
+tags: ["mechanics", "system", "merged"]
+stability: draft
+lastUpdated: 2025-09-24
+---
+
+## Overview
+
+Rule layer defining quantitative interactions and constraints supporting simulation and AI logic.
+
+### Core Components
+
+- Stats
+- Status Effects
+- Techniques & Weaves
+- Fray Escalation
+- Environmental Zones
+- Progression & Failure States
+
+### Design Principles
+
+| Principle               | Reason                          |
+| ----------------------- | ------------------------------- |
+| Determinism with Flavor | Predictable AI modeling         |
+| Layered Complexity      | Gradual contributor onboarding  |
+| Extensibility           | Future mechanics without rework |
+
+---
+
+## Stats
+
+| Stat       | Description                           | Design Note                |
+| ---------- | ------------------------------------- | -------------------------- |
+| Attack     | Baseline physical/force output        | Avoid linear inflation     |
+| Defense    | Mitigation of direct attacks          | Scales sub-linearly        |
+| Magic      | Resonant Technique potency            | Caps for balance           |
+| Focus      | Precision & control channel stability | Impacts status infliction  |
+| Speed      | Turn / action priority                | Soft cap to reduce runaway |
+| Resilience | Resistance to degradation & Fray      | Influences recovery        |
+
+### System Specification
+
+```json
+{
+  "entity": "StatSet",
+  "stats": ["Attack", "Defense", "Magic", "Focus", "Speed", "Resilience"],
+  "scaling": "nonLinear"
+}
+```
+
+---
+
+## Status Effects
+
+Deterministic transient conditions altering attribute or action states.
+
+| Effect     | Impact              | Counter          |
+| ---------- | ------------------- | ---------------- |
+| Tangle     | Speed reduction     | Purge            |
+| Static     | Focus reduction     | Grounding        |
+| Emberbrand | Damage over time    | Dampening        |
+| Hush       | Magic lockout       | Resonant cleanse |
+| Veil       | Evasion increase    | True sight       |
+| Anchor     | Movement prevention | Disrupt field    |
+
+### System Specification
+
+```json
+{
+  "entity": "StatusEffect",
+  "effects": ["Tangle", "Static", "Emberbrand", "Hush", "Veil", "Anchor"],
+  "counterRequired": true
+}
+```
+
+---
+
+## Techniques & Weaves
+
+Active capability taxonomy including cooperative Weaves.
+
+### Categories
+
+| Category       | Description                     | Source             |
+| -------------- | ------------------------------- | ------------------ |
+| Technique      | Standard active ability         | Individual Pattern |
+| Co-Weave       | Bonded composite action         | Harmonized pair    |
+| Ultimate Weave | High-cost keystone-level effect | Advanced bond      |
+
+### Balancing Axes
+
+- Cooldown length
+- Resource strain / Overstrain contribution
+- Multi-target scaling
+
+### System Specification
+
+```json
+{
+  "entity": "Technique",
+  "types": ["standard", "coWeave", "ultimate"],
+  "cooldownModel": "variable"
+}
+```
+
+---
+
+## Fray Escalation
+
+Procedural model for corruption tier advancement and rollback.
+
+### Trigger Inputs
+
+| Input                  | Effect on Tier Probability |
+| ---------------------- | -------------------------- |
+| Consecutive Overstrain | Increases                  |
+| Device Bind Exposure   | Strong increase            |
+| Failed Consent Pulse   | Minor increase             |
+
+### Decay Inputs
+
+| Input                | Effect                   |
+| -------------------- | ------------------------ |
+| Stabilization Ritual | Tier -1 after delay      |
+| Keystone Field       | Passive gradual decay    |
+| Cooldown Interval    | Chance-based micro decay |
+
+### System Specification
+
+```json
+{
+  "entity": "FrayEscalationModel",
+  "tierCount": 5,
+  "inputs": ["overstrain", "deviceBind", "failedConsent"],
+  "decayMechanisms": ["ritual", "keystoneField", "cooldown"]
+}
+```
+
+---
+
+## Environmental Zones
+
+Zone-level modifiers applying systemic effects.
+
+| Zone Type           | Modifier                   | Risk                 |
+| ------------------- | -------------------------- | -------------------- |
+| Surge Field         | Amplify resonance output   | Overstrain spike     |
+| Null Pocket         | Suppress Technique potency | Strategic reposition |
+| Fray Bloom          | Random effect variance     | Escalation           |
+| Stabilization Field | Gradual Fray decay         | Competitive control  |
+
+### System Specification
+
+```json
+{
+  "entity": "EnvironmentZone",
+  "zoneTypes": ["surge", "null", "frayBloom", "stabilization"],
+  "effectsStack": false
+}
+```
+
+---
+
+## Progression & Scaling
+
+Framework for controlled capability growth without runaway power.
+
+### Axes
+
+| Axis                  | Method              | Constraint          |
+| --------------------- | ------------------- | ------------------- |
+| Bond Stage            | Narrative + usage   | Maturation criteria |
+| Technique Tier Unlock | Experience / ritual | Cooldown cost rise  |
+| Stat Growth           | Weighted allocation | Diminishing returns |
+
+### Anti-Runaway Measures
+
+- Non-linear stat curves
+- Overstrain risk scaling with burst sequences
+
+---
+
+## Failure States
+
+Defined negative outcomes enabling recovery mechanics and risk telegraphing.
+
+| State              | Cause                         | Effect                | Recovery             |
+| ------------------ | ----------------------------- | --------------------- | -------------------- |
+| Mis-Harmonization  | Intent mismatch               | Attenuated Techniques | Intent recalibration |
+| Overstrain Lockout | Consecutive high-cost actions | Cooldown enforced     | Rest interval        |
+| Fray Collapse      | Tier V escalation             | Systemic hazard       | Keystone / ritual    |
+
+### Design Goal
+
+Every failure state should expose a clear, teachable remediation path.
+
+---
