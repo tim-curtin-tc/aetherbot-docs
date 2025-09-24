@@ -88,6 +88,13 @@
   "paths": {
     "/academies": {
       "get": {
+        "x-mint": {
+          "mcp": {
+            "enabled": true,
+            "name": "get-acadamies",
+            "description": "Get a list of academies"
+          }
+        },
         "tags": ["Academies"],
         "summary": "List academies",
         "parameters": [
