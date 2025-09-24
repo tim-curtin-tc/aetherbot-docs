@@ -1,5 +1,10 @@
 {
   "openapi": "3.0.3",
+  "x-mint": {
+    "mcp": {
+      "enabled": true
+    }
+  },
   "info": {
     "title": "Synthetic Aetherbot Domain API",
     "version": "0.2.0",
@@ -6565,7 +6570,14 @@
       },
       "Currency": {
         "type": "object",
-        "required": ["currencyId", "academyId", "code", "name", "decimals", "activeFlag"],
+        "required": [
+          "currencyId",
+          "academyId",
+          "code",
+          "name",
+          "decimals",
+          "activeFlag"
+        ],
         "properties": {
           "currencyId": {
             "type": "string",
@@ -6686,7 +6698,13 @@
       },
       "CardCollector": {
         "type": "object",
-        "required": ["collectorId", "handle", "displayName", "joinDate", "status"],
+        "required": [
+          "collectorId",
+          "handle",
+          "displayName",
+          "joinDate",
+          "status"
+        ],
         "properties": {
           "collectorId": {
             "type": "string",
@@ -7275,7 +7293,14 @@
       },
       "AllowancePlanCreate": {
         "type": "object",
-        "required": ["academyId", "name", "cycle", "creditAmount", "type", "startDate"],
+        "required": [
+          "academyId",
+          "name",
+          "cycle",
+          "creditAmount",
+          "type",
+          "startDate"
+        ],
         "properties": {
           "academyId": {
             "type": "string",
@@ -7613,7 +7638,12 @@
       },
       "PackOpening": {
         "type": "object",
-        "required": ["packOpeningId", "packId", "collectorId", "openedDateTime"],
+        "required": [
+          "packOpeningId",
+          "packId",
+          "collectorId",
+          "openedDateTime"
+        ],
         "properties": {
           "packOpeningId": {
             "type": "string",
@@ -7821,7 +7851,12 @@
       },
       "PurchaseOrderCreate": {
         "type": "object",
-        "required": ["storeId", "collectorId", "currencyAccountId", "lineItems"],
+        "required": [
+          "storeId",
+          "collectorId",
+          "currencyAccountId",
+          "lineItems"
+        ],
         "properties": {
           "storeId": {
             "type": "string",
@@ -7898,7 +7933,13 @@
           },
           "status": {
             "type": "string",
-            "enum": ["DRAFT", "REG_OPEN", "IN_PROGRESS", "COMPLETED", "CANCELLED"]
+            "enum": [
+              "DRAFT",
+              "REG_OPEN",
+              "IN_PROGRESS",
+              "COMPLETED",
+              "CANCELLED"
+            ]
           },
           "createdAt": {
             "type": "string",
@@ -7912,7 +7953,14 @@
       },
       "TournamentCreate": {
         "type": "object",
-        "required": ["academyId", "name", "seasonYear", "type", "startDate", "endDate"],
+        "required": [
+          "academyId",
+          "name",
+          "seasonYear",
+          "type",
+          "startDate",
+          "endDate"
+        ],
         "properties": {
           "academyId": {
             "type": "string",
@@ -7946,7 +7994,13 @@
           },
           "status": {
             "type": "string",
-            "enum": ["DRAFT", "REG_OPEN", "IN_PROGRESS", "COMPLETED", "CANCELLED"]
+            "enum": [
+              "DRAFT",
+              "REG_OPEN",
+              "IN_PROGRESS",
+              "COMPLETED",
+              "CANCELLED"
+            ]
           }
         }
       },
@@ -8047,7 +8101,13 @@
       },
       "LeagueSeasonCreate": {
         "type": "object",
-        "required": ["year", "divisionStructureVersion", "phase", "startDate", "endDate"],
+        "required": [
+          "year",
+          "divisionStructureVersion",
+          "phase",
+          "startDate",
+          "endDate"
+        ],
         "properties": {
           "year": {
             "type": "integer"
@@ -8168,7 +8228,13 @@
           },
           "status": {
             "type": "string",
-            "enum": ["DRAFT", "SCHEDULED", "IN_PROGRESS", "COMPLETED", "CANCELLED"]
+            "enum": [
+              "DRAFT",
+              "SCHEDULED",
+              "IN_PROGRESS",
+              "COMPLETED",
+              "CANCELLED"
+            ]
           },
           "createdAt": {
             "type": "string",
@@ -8182,7 +8248,13 @@
       },
       "EventCreate": {
         "type": "object",
-        "required": ["academyId", "type", "topic", "startDateTime", "endDateTime"],
+        "required": [
+          "academyId",
+          "type",
+          "topic",
+          "startDateTime",
+          "endDateTime"
+        ],
         "properties": {
           "academyId": {
             "type": "string",
@@ -8213,13 +8285,25 @@
           },
           "status": {
             "type": "string",
-            "enum": ["DRAFT", "SCHEDULED", "IN_PROGRESS", "COMPLETED", "CANCELLED"]
+            "enum": [
+              "DRAFT",
+              "SCHEDULED",
+              "IN_PROGRESS",
+              "COMPLETED",
+              "CANCELLED"
+            ]
           }
         }
       },
       "EventParticipation": {
         "type": "object",
-        "required": ["participationId", "eventId", "collectorId", "role", "status"],
+        "required": [
+          "participationId",
+          "eventId",
+          "collectorId",
+          "role",
+          "status"
+        ],
         "properties": {
           "participationId": {
             "type": "string",
@@ -8239,7 +8323,13 @@
           },
           "status": {
             "type": "string",
-            "enum": ["REGISTERED", "WAITLIST", "ATTENDED", "NO_SHOW", "CANCELLED"]
+            "enum": [
+              "REGISTERED",
+              "WAITLIST",
+              "ATTENDED",
+              "NO_SHOW",
+              "CANCELLED"
+            ]
           },
           "createdAt": {
             "type": "string",
@@ -8270,7 +8360,13 @@
         "properties": {
           "status": {
             "type": "string",
-            "enum": ["REGISTERED", "WAITLIST", "ATTENDED", "NO_SHOW", "CANCELLED"]
+            "enum": [
+              "REGISTERED",
+              "WAITLIST",
+              "ATTENDED",
+              "NO_SHOW",
+              "CANCELLED"
+            ]
           }
         }
       },
