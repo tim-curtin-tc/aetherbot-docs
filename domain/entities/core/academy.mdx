@@ -1,7 +1,7 @@
 ---
 title: "Core: Academy Entity"
 slug: domain/entities/academy
-description: Persistent representation of an Academy – the institutional node where humans, aetherbots, and progression systems converge in the aetherbot domain.
+description: Persistent representation of an Academy – the institutional node where students, aetherbots, and progression systems converge in the aetherbot domain.
 status: experimental
 lastUpdated: 2025-09-24
 stability: experimental
@@ -12,7 +12,7 @@ tags: [core-entity, progression, social]
 
 ## 1. Canonical Definition
 
-An **Academy** is the primary institutional aggregate in the aetherbot domain that anchors structured progression, curriculum orchestration, rostered participation (humans + aetherbots), and regulated access to tournaments, training threads, and capability unlocks. It acts as both:
+An **Academy** is the primary institutional aggregate in the aetherbot domain that anchors structured progression, curriculum orchestration, rostered participation (students + aetherbots), and regulated access to tournaments, training threads, and capability unlocks. It acts as both:
 
 - a governance + policy surface (eligibility, rank thresholds, roster limits), and
 - a semantic nexus tying together accounts, collections, teams, events, and evaluation artifacts.
@@ -21,24 +21,24 @@ It is persisted as a first-class resource (API + ER model) and must be globally 
 
 ## 2. Primary Responsibilities
 
-| Responsibility         | Description                                                                                                |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------- |
-| Progression Envelope   | Defines allowed rank tiers, evaluation cadence, and advancement criteria.                                  |
-| Roster Aggregation     | Owns membership enrollment of Humans (participants / administrators) and indirectly associated Aetherbots. |
-| Capability Policy      | Determines which techniques, pattern modules, or experimental features are enabled.                        |
-| Event Eligibility Gate | Filters which Teams / Individuals may register for tournaments or sanctioned events.                       |
-| Curriculum Structuring | Provides scaffolding for training sequences (threads, modules, assessments).                               |
-| Integrity & Compliance | Enforces integrity constraints: uniqueness, enrollment caps, suspension logic.                             |
+| Responsibility         | Description                                                                                                  |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Progression Envelope   | Defines allowed rank tiers, evaluation cadence, and advancement criteria.                                    |
+| Roster Aggregation     | Owns membership enrollment of Students (participants / administrators) and indirectly associated Aetherbots. |
+| Capability Policy      | Determines which techniques, pattern modules, or experimental features are enabled.                          |
+| Event Eligibility Gate | Filters which Teams / Individuals may register for tournaments or sanctioned events.                         |
+| Curriculum Structuring | Provides scaffolding for training sequences (threads, modules, assessments).                                 |
+| Integrity & Compliance | Enforces integrity constraints: uniqueness, enrollment caps, suspension logic.                               |
 
 ## 3. External Identity & Referencing
 
-| Aspect             | Rule                                                                       |
-| ------------------ | -------------------------------------------------------------------------- |
-| Global Identifier  | `academyId` (ULID or UUID v7 recommended for time-sortable introspection). |
-| Human Readable Key | Slug (immutable once published; must be unique domain-wide).               |
-| Display Name       | Mutable, versioned via name history log.                                   |
-| Status             | Enum: `ACTIVE`, `SUSPENDED`, `RETIRED`, `DEPRECATED_PLANNED`.              |
-| Visibility         | Enum: `PUBLIC`, `INVITE_ONLY`, `INTERNAL_TEST`.                            |
+| Aspect               | Rule                                                                       |
+| -------------------- | -------------------------------------------------------------------------- |
+| Global Identifier    | `academyId` (ULID or UUID v7 recommended for time-sortable introspection). |
+| Student Readable Key | Slug (immutable once published; must be unique domain-wide).               |
+| Display Name         | Mutable, versioned via name history log.                                   |
+| Status               | Enum: `ACTIVE`, `SUSPENDED`, `RETIRED`, `DEPRECATED_PLANNED`.              |
+| Visibility           | Enum: `PUBLIC`, `INVITE_ONLY`, `INTERNAL_TEST`.                            |
 
 ## 4. Core Attribute Model
 
@@ -64,18 +64,18 @@ It is persisted as a first-class resource (API + ER model) and must be globally 
 
 ## 5. Relationship Topology
 
-| Related Entity             | Relationship Type         | Cardinality (from Academy) | Notes                                                 |
-| -------------------------- | ------------------------- | -------------------------- | ----------------------------------------------------- |
-| Account                    | Owned-by (ownerAccountId) | 1                          | Administrative ownership.                             |
-| Human                      | Enrolls                   | 0..N                       | Via membership relation (AcademyMembership).          |
-| Aetherbot                  | Indirect Association      | 0..N                       | Through Teams or Collections tied to enrolled Humans. |
-| Team                       | Hosts / Sanctions         | 0..N                       | Teams may declare Academy alignment.                  |
-| Tournament                 | Authorizes Participation  | 0..N                       | Academy may sponsor or restrict entry.                |
-| AetherbotCard              | Indirect Availability     | 0..N                       | Access gated by Academy policy layers.                |
-| Technique / Pattern Module | Enables                   | 0..N                       | Activation governed by capability policy.             |
-| IntegrityIncident          | Observes                  | 0..N                       | Logged for auditing and scoring.                      |
-| CurriculumThread           | Structures                | 0..N                       | Learning / training threads sequenced here.           |
-| AuditLogEntry              | Emits                     | 0..N                       | For state transitions & policy changes.               |
+| Related Entity             | Relationship Type         | Cardinality (from Academy) | Notes                                                   |
+| -------------------------- | ------------------------- | -------------------------- | ------------------------------------------------------- |
+| Account                    | Owned-by (ownerAccountId) | 1                          | Administrative ownership.                               |
+| Student                    | Enrolls                   | 0..N                       | Via membership relation (AcademyMembership).            |
+| Aetherbot                  | Indirect Association      | 0..N                       | Through Teams or Collections tied to enrolled Students. |
+| Team                       | Hosts / Sanctions         | 0..N                       | Teams may declare Academy alignment.                    |
+| Tournament                 | Authorizes Participation  | 0..N                       | Academy may sponsor or restrict entry.                  |
+| AetherbotCard              | Indirect Availability     | 0..N                       | Access gated by Academy policy layers.                  |
+| Technique / Pattern Module | Enables                   | 0..N                       | Activation governed by capability policy.               |
+| IntegrityIncident          | Observes                  | 0..N                       | Logged for auditing and scoring.                        |
+| CurriculumThread           | Structures                | 0..N                       | Learning / training threads sequenced here.             |
+| AuditLogEntry              | Emits                     | 0..N                       | For state transitions & policy changes.                 |
 
 ## 6. Lifecycle States & Transitions
 
@@ -142,8 +142,8 @@ POST   /academies/{academyId}/reinstate
 POST   /academies/{academyId}/deprecate-planned
 POST   /academies/{academyId}/retire
 GET    /academies/{academyId}/members
-POST   /academies/{academyId}/members (enroll human)
-DELETE /academies/{academyId}/members/{humanId}
+POST   /academies/{academyId}/members (enroll student)
+DELETE /academies/{academyId}/members/{studentId}
 GET    /academies/{academyId}/events (tournaments / curriculum-affiliated)
 ```
 
@@ -168,7 +168,7 @@ mutateAcademy(input: AcademyMutation!): AcademyMutationResult
 
 - Write operations restricted to Owner or delegated ADMIN roles with scoped capability.
 - Suspension / Retirement actions require elevated audit context (reason code + actorId + timestamp).
-- Enrollment operations must check both Academy status and target Human account status.
+- Enrollment operations must check both Academy status and target Student account status.
 
 ## 13. Observability
 
@@ -183,7 +183,7 @@ mutateAcademy(input: AcademyMutation!): AcademyMutationResult
 | Policy Versioning         | Do we snapshot full enrollmentPolicy per change for historical replay?            |
 | Membership Roles          | Should we formalize role taxonomy beyond (MEMBER, ADMIN)?                         |
 | IntegrityScore Inputs     | Source weighting (incident severity vs. growth volatility)?                       |
-| Multi-Academy Affiliation | Allow a Human to belong to multiple simultaneously? If yes, gating conflicts?     |
+| Multi-Academy Affiliation | Allow a Student to belong to multiple simultaneously? If yes, gating conflicts?   |
 | Curriculum Coupling       | Separate service boundary for training threads vs inline under Academy aggregate? |
 
 ---

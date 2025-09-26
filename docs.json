@@ -39,7 +39,7 @@
             "pages": [
               "domain/entities/core/academy",
               "domain/entities/core/account",
-              "domain/entities/core/human",
+              "domain/entities/core/student",
               "domain/entities/core/aetherbot",
               "domain/entities/core/aetherbotcard",
               "domain/entities/core/team",

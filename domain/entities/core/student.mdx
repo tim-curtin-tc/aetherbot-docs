@@ -1,6 +1,6 @@
 ---
-title: "Core: Human Entity"
-slug: domain/entities/human
+title: "Core: Collector Entity"
+slug: domain/entities/collector
 description: Enriched participant profile extending an Account with narrative, capability, and participation attributes in the aetherbot domain.
 status: experimental
 lastUpdated: 2025-09-24
@@ -8,11 +8,11 @@ stability: experimental
 tags: [core-entity, participant, profile]
 ---
 
-# Human (Core Domain Entity)
+# Collector (Core Domain Entity)
 
 ## 1. Canonical Definition
 
-A **Human** represents the in-domain participant persona linked (almost always 1:1) to an Account. It provides extended profile, progression, affiliation, and participation metadata distinct from authentication or asset ownership concerns. Separation allows privacy scoping, redaction, or multiple persona strategies (if later allowed) without mutating security primitives.
+A **Collector** represents the in-domain participant persona linked (almost always 1:1) to an Account. It provides extended profile, progression, affiliation, and participation metadata distinct from authentication or asset ownership concerns. Separation allows privacy scoping, redaction, or multiple persona strategies (if later allowed) without mutating security primitives.
 
 ## 2. Primary Responsibilities
 
@@ -22,13 +22,13 @@ A **Human** represents the in-domain participant persona linked (almost always 1
 | Participation State   | Tracks eligibility, disciplinary flags, achievement unlocks.                        |
 | Progression Wrapper   | References rank, skill metrics, mastery indicators decoupled from account security. |
 | Affiliation Surface   | Maintains current Academy memberships & Team associations.                          |
-| Aetherbot Stewardship | Indicates which Aetherbots a Human actively manages operationally.                  |
+| Aetherbot Stewardship | Indicates which Aetherbots a Collector actively manages operationally.              |
 
 ## 3. Identity & Referencing
 
 | Aspect            | Rule                                                                     |
 | ----------------- | ------------------------------------------------------------------------ |
-| Global Identifier | `humanId` (UUID v7 / ULID).                                              |
+| Global Identifier | `collectorId` (UUID v7 / ULID).                                          |
 | Account Link      | Required `accountId` FK (1:1 enforced currently).                        |
 | Handle            | May mirror Account handle or be independently mutable (policy decision). |
 | Status            | `ACTIVE`, `RESTRICTED`, `BANNED`, `RETIRED`.                             |
@@ -38,7 +38,7 @@ A **Human** represents the in-domain participant persona linked (almost always 1
 
 | Field             | Type        | Card | Notes                                                 |
 | ----------------- | ----------- | ---- | ----------------------------------------------------- |
-| humanId           | ID          | 1    | PK.                                                   |
+| collectorId       | ID          | 1    | PK.                                                   |
 | accountId         | ID(Account) | 1    | Unique index ensures 1:1.                             |
 | displayName       | string      | 1    | User-facing; distinct from account handle if desired. |
 | biography         | richtext    | 0..1 | Sanitized markdown.                                   |
@@ -59,17 +59,17 @@ A **Human** represents the in-domain participant persona linked (almost always 1
 
 ## 5. Relationship Topology
 
-| Related Entity    | Type         | Cardinality (from Human) | Notes                                                 |
-| ----------------- | ------------ | ------------------------ | ----------------------------------------------------- |
-| Account           | Extends      | 1                        | Mandatory link.                                       |
-| Academy           | Member-of    | 0..N                     | Through membership relation (HumanAcademyMembership). |
-| Team              | Participates | 0..N                     | Team membership pivot.                                |
-| Aetherbot         | Operates     | 0..N                     | Operational assignment (not necessarily ownership).   |
-| AetherbotCard     | Uses         | 0..N                     | Usage telemetry linking for mastery.                  |
-| Tournament        | Competes     | 0..N                     | Via registration entries.                             |
-| IntegrityIncident | Subject      | 0..N                     | Disciplinary tracking.                                |
-| Achievement       | Unlocks      | 0..N                     | If achievements modeled as entity.                    |
-| AuditLogEntry     | Emits        | 0..N                     | Status / privacy changes.                             |
+| Related Entity    | Type         | Cardinality (from Collector) | Notes                                                     |
+| ----------------- | ------------ | ---------------------------- | --------------------------------------------------------- |
+| Account           | Extends      | 1                            | Mandatory link.                                           |
+| Academy           | Member-of    | 0..N                         | Through membership relation (CollectorAcademyMembership). |
+| Team              | Participates | 0..N                         | Team membership pivot.                                    |
+| Aetherbot         | Operates     | 0..N                         | Operational assignment (not necessarily ownership).       |
+| AetherbotCard     | Uses         | 0..N                         | Usage telemetry linking for mastery.                      |
+| Tournament        | Competes     | 0..N                         | Via registration entries.                                 |
+| IntegrityIncident | Subject      | 0..N                         | Disciplinary tracking.                                    |
+| Achievement       | Unlocks      | 0..N                         | If achievements modeled as entity.                        |
+| AuditLogEntry     | Emits        | 0..N                         | Status / privacy changes.                                 |
 
 ## 6. Lifecycle & Status Rules
 
@@ -88,25 +88,25 @@ A **Human** represents the in-domain participant persona linked (almost always 1
 
 ## 8. Domain Events
 
-| Event                     | Trigger                |
-| ------------------------- | ---------------------- |
-| HumanProfileCreated       | Insert                 |
-| HumanStatusChanged        | status field mutation  |
-| HumanPrivacyTierChanged   | privacyTier mutation   |
-| HumanRankChanged          | rank delta             |
-| HumanMasteryVectorUpdated | mastery recalculation  |
-| HumanAchievementUnlocked  | achievementRefs append |
+| Event                         | Trigger                |
+| ----------------------------- | ---------------------- |
+| CollectorProfileCreated       | Insert                 |
+| CollectorStatusChanged        | status field mutation  |
+| CollectorPrivacyTierChanged   | privacyTier mutation   |
+| CollectorRankChanged          | rank delta             |
+| CollectorMasteryVectorUpdated | mastery recalculation  |
+| CollectorAchievementUnlocked  | achievementRefs append |
 
 ## 9. Representative API Surface
 
 ```
-POST   /humans
-GET    /humans/{humanId}
-GET    /humans?rank=...&privacyTier=...&status=...
-PATCH  /humans/{humanId}
-POST   /humans/{humanId}/restrict
-POST   /humans/{humanId}/ban
-POST   /humans/{humanId}/reinstate
+POST   /card-collectors
+GET    /card-collectors/{collectorId}
+GET    /card-collectors?rank=...&privacyTier=...&status=...
+PATCH  /card-collectors/{collectorId}
+POST   /card-collectors/{collectorId}/restrict
+POST   /card-collectors/{collectorId}/ban
+POST   /card-collectors/{collectorId}/reinstate
 ```
 
 ## 10. Indexing & Query Patterns
@@ -114,7 +114,7 @@ POST   /humans/{humanId}/reinstate
 | Query                | Index                                                |
 | -------------------- | ---------------------------------------------------- |
 | Lookup by accountId  | Unique(accountId)                                    |
-| Filter by status     | (status, humanId)                                    |
+| Filter by status     | (status, collectorId)                                |
 | Rank leaderboard     | (rank, masteryVector.metricX DESC) materialized view |
 | Privacy-gated search | (privacyTier, status)                                |
 
@@ -126,12 +126,12 @@ POST   /humans/{humanId}/reinstate
 
 ## 12. Open Questions
 
-| Area                 | Question                                                 |
-| -------------------- | -------------------------------------------------------- |
-| Multi-persona        | Allow multiple Humans per Account later? Migration path? |
-| Rank recalculation   | Event-sourced vs scheduled batch?                        |
-| Achievement modeling | First-class entity vs embedded array?                    |
+| Area                 | Question                                                     |
+| -------------------- | ------------------------------------------------------------ |
+| Multi-persona        | Allow multiple Collectors per Account later? Migration path? |
+| Rank recalculation   | Event-sourced vs scheduled batch?                            |
+| Achievement modeling | First-class entity vs embedded array?                        |
 
 ---
 
-This page defines the Human entity within the persistent aetherbot domain.
+This page defines the Collector entity within the persistent aetherbot domain.

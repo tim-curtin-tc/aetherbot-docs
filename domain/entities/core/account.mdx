@@ -12,7 +12,7 @@ tags: [core-entity, identity, security]
 
 ## 1. Canonical Definition
 
-An **Account** is the root authentication and authorization principal in the aetherbot domain. It owns credentials, role assignments, and acts as the administrative container for subordinate domain objects (e.g., Academy ownership, Aetherbot custody, Collection / Card ownership). It is distinct from an in-universe "Human" participant profile (which may extend behavioral or narrative attributes) but may map 1:1 in most present use cases.
+An **Account** is the root authentication and authorization principal in the aetherbot domain. It owns credentials, role assignments, and acts as the administrative container for subordinate domain objects (e.g., Academy ownership, Aetherbot custody, Collection / Card ownership). It is distinct from an in-universe "Collector" participant profile (which may extend behavioral or narrative attributes) but may map 1:1 in most present use cases.
 
 ## 2. Primary Responsibilities
 
@@ -58,7 +58,7 @@ An **Account** is the root authentication and authorization principal in the aet
 | Related Entity    | Type         | Cardinality (from Account) | Notes                                                       |
 | ----------------- | ------------ | -------------------------- | ----------------------------------------------------------- |
 | Academy           | Owns         | 0..N                       | As ownerAccountId.                                          |
-| Human             | Realizes     | 0..1                       | Optional enriched participant profile.                      |
+| Collector         | Realizes     | 0..1                       | Optional enriched participant profile.                      |
 | Aetherbot         | Custodies    | 0..N                       | Ownership or operational control.                           |
 | AetherbotCard     | Owns         | 0..N                       | Inventory / collection.                                     |
 | Team              | Participates | 0..N                       | Via membership bridging through Human or direct if allowed. |

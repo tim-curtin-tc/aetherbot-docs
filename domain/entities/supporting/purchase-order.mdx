@@ -25,11 +25,11 @@ A **Purchase Order** (PO) records a user's intent to acquire one or more purchas
 
 ## 3. Identity & Referencing
 
-| Aspect     | Rule                                           |
-| ---------- | ---------------------------------------------- |
-| Identifier | `purchaseOrderId`.                             |
-| Buyer      | accountId / humanId depending on auth context. |
-| Payment    | tenderAccountId or external payment reference. |
+| Aspect     | Rule                                             |
+| ---------- | ------------------------------------------------ |
+| Identifier | `purchaseOrderId`.                               |
+| Buyer      | accountId / studentId depending on auth context. |
+| Payment    | tenderAccountId or external payment reference.   |
 
 ## 4. Core Attributes
 
@@ -37,7 +37,7 @@ A **Purchase Order** (PO) records a user's intent to acquire one or more purchas
 | --------------- | -------------------------- | -------------------------------------------------- |
 | purchaseOrderId | ID                         | PK.                                                |
 | buyerAccountId  | ID(Account)                | Primary buyer context.                             |
-| buyerHumanId    | ID(Human)                  | Optional explicit human.                           |
+| buyerStudentId  | ID(Student)                | Optional explicit student.                         |
 | lineItems       | `array<PurchaseOrderLine>` | Snapshot (sku, qty, unitPrice, currency).          |
 | subtotal        | decimal                    | Sum line (qty \* unitPrice).                       |
 | tax             | decimal                    | Jurisdictional computed.                           |

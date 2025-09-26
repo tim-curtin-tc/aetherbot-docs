@@ -1,0 +1,137 @@
+---
+title: "Core: Collector Entity"
+slug: domain/entities/collector
+description: Enriched participant profile extending an Account with narrative, capability, and participation attributes in the aetherbot domain.
+status: experimental
+lastUpdated: 2025-09-24
+stability: experimental
+tags: [core-entity, participant, profile]
+---
+
+# Collector (Core Domain Entity)
+
+## 1. Canonical Definition
+
+A **Collector** represents the in-domain participant persona linked (almost always 1:1) to an Account. It provides extended profile, progression, affiliation, and participation metadata distinct from authentication or asset ownership concerns. Separation allows privacy scoping, redaction, or multiple persona strategies (if later allowed) without mutating security primitives.
+
+## 2. Primary Responsibilities
+
+| Responsibility        | Description                                                                         |
+| --------------------- | ----------------------------------------------------------------------------------- |
+| Persona Profile       | Stores display name, biography, avatar, pronouns, region, time zone.                |
+| Participation State   | Tracks eligibility, disciplinary flags, achievement unlocks.                        |
+| Progression Wrapper   | References rank, skill metrics, mastery indicators decoupled from account security. |
+| Affiliation Surface   | Maintains current Academy memberships & Team associations.                          |
+| Aetherbot Stewardship | Indicates which Aetherbots a Collector actively manages operationally.                |
+
+## 3. Identity & Referencing
+
+| Aspect            | Rule                                                                     |
+| ----------------- | ------------------------------------------------------------------------ |
+| Global Identifier | `collectorId` (UUID v7 / ULID).                                            |
+| Account Link      | Required `accountId` FK (1:1 enforced currently).                        |
+| Handle            | May mirror Account handle or be independently mutable (policy decision). |
+| Status            | `ACTIVE`, `RESTRICTED`, `BANNED`, `RETIRED`.                             |
+| Privacy Tier      | `PUBLIC`, `LIMITED`, `PRIVATE`.                                          |
+
+## 4. Core Attribute Model
+
+| Field             | Type        | Card | Notes                                                 |
+| ----------------- | ----------- | ---- | ----------------------------------------------------- |
+| collectorId       | ID          | 1    | PK.                                                   |
+| accountId         | ID(Account) | 1    | Unique index ensures 1:1.                             |
+| displayName       | string      | 1    | User-facing; distinct from account handle if desired. |
+| biography         | richtext    | 0..1 | Sanitized markdown.                                   |
+| avatarUrl         | uri         | 0..1 | CDN host validation.                                  |
+| pronouns          | string      | 0..1 | Freeform within length guard.                         |
+| region            | string      | 0..1 | ISO subdivision or internal taxonomy.                 |
+| timeZone          | string      | 0..1 | IANA TZ identifier.                                   |
+| status            | enum        | 1    | See Status set.                                       |
+| privacyTier       | enum        | 1    | Controls exposure in public queries.                  |
+| rank              | string      | 0..1 | Reference to rank schema code.                        |
+| masteryVector     | JSON        | 0..1 | Skill metrics (pattern categories, tactical indices). |
+| achievementRefs   | JSON        | 0..1 | Array of unlocked achievement identifiers.            |
+| disciplinaryFlags | JSON        | 0..1 | Structured infraction markers.                        |
+| metadata          | JSON        | 0..1 | Extensible.                                           |
+| createdAt         | timestamp   | 1    | System set.                                           |
+| updatedAt         | timestamp   | 1    | System updated.                                       |
+| version           | int         | 1    | OCC.                                                  |
+
+## 5. Relationship Topology
+
+| Related Entity    | Type         | Cardinality (from Collector) | Notes                                                   |
+| ----------------- | ------------ | -------------------------- | ------------------------------------------------------- |
+| Account           | Extends      | 1                          | Mandatory link.                                         |
+| Academy           | Member-of    | 0..N                       | Through membership relation (CollectorAcademyMembership). |
+| Team              | Participates | 0..N                       | Team membership pivot.                                  |
+| Aetherbot         | Operates     | 0..N                       | Operational assignment (not necessarily ownership).     |
+| AetherbotCard     | Uses         | 0..N                       | Usage telemetry linking for mastery.                    |
+| Tournament        | Competes     | 0..N                       | Via registration entries.                               |
+| IntegrityIncident | Subject      | 0..N                       | Disciplinary tracking.                                  |
+| Achievement       | Unlocks      | 0..N                       | If achievements modeled as entity.                      |
+| AuditLogEntry     | Emits        | 0..N                       | Status / privacy changes.                               |
+
+## 6. Lifecycle & Status Rules
+
+- `RESTRICTED`: Limited participation (may view but not compete).
+- `BANNED`: Hard exclusion from events & roster updates; underlying Account may also be suspended.
+- `RETIRED`: Voluntary archival; remains referenceable historically.
+
+## 7. Invariants & Constraints
+
+| Constraint                               | Rationale                         | Enforcement        |
+| ---------------------------------------- | --------------------------------- | ------------------ |
+| 1:1 Account link                         | Maintain clear security boundary  | Unique(accountId)  |
+| No participation if not ACTIVE           | Preserve integrity of competition | Application guard  |
+| Privacy tier governs exposure            | Respect user preference           | Query layer filter |
+| Disciplinary escalations escalate status | Consistent enforcement path       | Rule engine        |
+
+## 8. Domain Events
+
+| Event                         | Trigger                |
+| ----------------------------- | ---------------------- |
+| CollectorProfileCreated       | Insert                 |
+| CollectorStatusChanged        | status field mutation  |
+| CollectorPrivacyTierChanged   | privacyTier mutation   |
+| CollectorRankChanged          | rank delta             |
+| CollectorMasteryVectorUpdated | mastery recalculation  |
+| CollectorAchievementUnlocked  | achievementRefs append |
+
+## 9. Representative API Surface
+
+```
+POST   /card-collectors
+GET    /card-collectors/{collectorId}
+GET    /card-collectors?rank=...&privacyTier=...&status=...
+PATCH  /card-collectors/{collectorId}
+POST   /card-collectors/{collectorId}/restrict
+POST   /card-collectors/{collectorId}/ban
+POST   /card-collectors/{collectorId}/reinstate
+```
+
+## 10. Indexing & Query Patterns
+
+| Query                | Index                                                |
+| -------------------- | ---------------------------------------------------- |
+| Lookup by accountId  | Unique(accountId)                                    |
+| Filter by status     | (status, collectorId)                                  |
+| Rank leaderboard     | (rank, masteryVector.metricX DESC) materialized view |
+| Privacy-gated search | (privacyTier, status)                                |
+
+## 11. Observability & Integrity
+
+- Track profile view counts (anonymized) for abuse detection.
+- Mastery updates should attach provenance (source event set).
+- Privacy changes fully audited with old/new diff.
+
+## 12. Open Questions
+
+| Area                 | Question                                                   |
+| -------------------- | ---------------------------------------------------------- |
+| Multi-persona        | Allow multiple Collectors per Account later? Migration path? |
+| Rank recalculation   | Event-sourced vs scheduled batch?                          |
+| Achievement modeling | First-class entity vs embedded array?                      |
+
+---
+
+This page defines the Collector entity within the persistent aetherbot domain.

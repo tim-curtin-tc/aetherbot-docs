@@ -12,7 +12,7 @@ tags: [core-entity, competition, event]
 
 ## 1. Canonical Definition
 
-A **Tournament** is a persistent event aggregate coordinating registration, seeding, scheduling, bracket or pool phases, progression advancement, adjudication, and result finalization. It links eligible Teams / Humans, enforces rulesets, and emits structured outcomes (rankings, stats, advancement tokens).
+A **Tournament** is a persistent event aggregate coordinating registration, seeding, scheduling, bracket or pool phases, progression advancement, adjudication, and result finalization. It links eligible Teams / Collectors, enforces rulesets, and emits structured outcomes (rankings, stats, advancement tokens).
 
 ## 2. Primary Responsibilities
 
@@ -63,7 +63,7 @@ A **Tournament** is a persistent event aggregate coordinating registration, seed
 | Related Entity    | Type                  | Cardinality (from Tournament) | Notes                              |
 | ----------------- | --------------------- | ----------------------------- | ---------------------------------- |
 | Team              | Registers             | 0..N                          | Via registration pivot.            |
-| Human             | Registers (solo mode) | 0..N                          | If individual format supported.    |
+| Collector         | Registers (solo mode) | 0..N                          | If individual format supported.    |
 | Match (future)    | Contains              | 0..N                          | Phase -> match mapping.            |
 | Academy           | Sponsors              | 0..1                          | Optional affiliation.              |
 | IntegrityIncident | Subject               | 0..N                          | Collusion / timing violations.     |
