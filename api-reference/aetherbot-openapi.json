@@ -1,83 +1,104 @@
 {
   "openapi": "3.0.3",
-  "x-mint": {
-    "mcp": {
-      "enabled": true
-    }
-  },
   "info": {
     "title": "Synthetic Aetherbot Domain API",
     "version": "0.2.0",
-    "description": "Expanded synthetic domain contract with full CRUD/read patterns, pagination envelopes, standardized error model, action endpoints, and security for academies, stores, collectors, teams & memberships, battle stations, rule sets, entitlement profiles, currencies & accounts, catalog & cards, housing & allowance plans, inventory, packs & openings, trades, purchase orders, tournaments & results, league seasons & standings, events & participations, and sages."
+    "description": "Expanded synthetic domain contract with full CRUD/read patterns, pagination envelopes, standardized error model, action endpoints, and security for academies, stores, collectors, teams & memberships, battle stations, rule sets, entitlement profiles, currencies & accounts, catalog & cards, housing & allowance plans, inventory, packs & openings, trades, purchase orders, tournaments & results, league seasons & standings, events & participations, and sages.\n\nSoft delete: Resources that support lifecycle state transitions expose a 'status' (e.g. ACTIVE, INACTIVE, ARCHIVED) rather than a hard DELETE operation in this version. DELETE endpoints are intentionally omitted in favor of explicit status transitions; future iterations may add DELETE once retention policies are finalized.",
+    "license": {
+      "name": "Creative Commons Attribution 4.0 International",
+      "url": "https://creativecommons.org/licenses/by/4.0/"
+    }
   },
   "servers": [
     {
-      "url": "https://api.example.com/v1"
+      "url": "https://api.aetherbot.io/v1",
+      "description": "Primary production environment"
     }
   ],
   "tags": [
     {
-      "name": "Academies"
+      "name": "Academies",
+      "description": "Academy management and lifecycle operations"
     },
     {
-      "name": "Stores"
+      "name": "Stores",
+      "description": "Retail store catalog and state changes"
     },
     {
-      "name": "Collectors"
+      "name": "Collectors",
+      "description": "Collector profiles, preferences, and account links"
     },
     {
-      "name": "Teams"
+      "name": "Teams",
+      "description": "Team creation, membership, and roster management"
     },
     {
-      "name": "BattleStations"
+      "name": "BattleStations",
+      "description": "Battle station configuration and availability"
     },
     {
-      "name": "RuleSets"
+      "name": "RuleSets",
+      "description": "Gameplay rule set definitions and revisions"
     },
     {
-      "name": "EntitlementProfiles"
+      "name": "EntitlementProfiles",
+      "description": "Entitlement profile templates and assignments"
     },
     {
-      "name": "Currencies"
+      "name": "Currencies",
+      "description": "Virtual currencies and denomination management"
     },
     {
-      "name": "CurrencyAccounts"
+      "name": "CurrencyAccounts",
+      "description": "Currency account balances and transactions"
     },
     {
-      "name": "Catalog"
+      "name": "Catalog",
+      "description": "Storefront catalog listings and categories"
     },
     {
-      "name": "Cards"
+      "name": "Cards",
+      "description": "Collectible card metadata and ownership"
     },
     {
-      "name": "Housing"
+      "name": "Housing",
+      "description": "Housing plans, units, and assignments"
     },
     {
-      "name": "Allowance"
+      "name": "Allowance",
+      "description": "Allowance plan configuration and enrollment"
     },
     {
-      "name": "Inventory"
+      "name": "Inventory",
+      "description": "Inventory items and collector holdings"
     },
     {
-      "name": "Packs"
+      "name": "Packs",
+      "description": "Pack definitions, openings, and contents"
     },
     {
-      "name": "Trades"
+      "name": "Trades",
+      "description": "Collector trade proposals and lifecycle"
     },
     {
-      "name": "PurchaseOrders"
+      "name": "PurchaseOrders",
+      "description": "Purchase order submission and fulfillment"
     },
     {
-      "name": "Tournaments"
+      "name": "Tournaments",
+      "description": "Tournament scheduling, registration, and results"
     },
     {
-      "name": "League"
+      "name": "League",
+      "description": "League season structures and standings"
     },
     {
-      "name": "Events"
+      "name": "Events",
+      "description": "Event programming and participation tracking"
     },
     {
-      "name": "Sages"
+      "name": "Sages",
+      "description": "Sage NPC definitions and interactions"
     }
   ],
   "security": [
@@ -88,13 +109,6 @@
   "paths": {
     "/academies": {
       "get": {
-        "x-mint": {
-          "mcp": {
-            "enabled": true,
-            "name": "get-acadamies",
-            "description": "Get a list of academies"
-          }
-        },
         "tags": ["Academies"],
         "summary": "List academies",
         "parameters": [
@@ -142,6 +156,11 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/AcademyCreate"
+              },
+              "examples": {
+                "default": {
+                  "$ref": "#/components/examples/AcademyCreateExample"
+                }
               }
             }
           }
@@ -153,6 +172,11 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Academy"
+                },
+                "examples": {
+                  "default": {
+                    "$ref": "#/components/examples/AcademyResponseExample"
+                  }
                 }
               }
             }
@@ -179,7 +203,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "createAcademies"
+        "operationId": "createAcademy"
       }
     },
     "/academies/{academyId}": {
@@ -224,7 +248,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "getAcademyById"
+        "operationId": "getAcademy"
       },
       "patch": {
         "tags": ["Academies"],
@@ -277,7 +301,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "patchAcademiesById"
+        "operationId": "updateAcademy"
       }
     },
     "/stores": {
@@ -293,6 +317,15 @@
           },
           {
             "name": "academyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false
+          },
+          {
+            "name": "storeId",
             "in": "query",
             "schema": {
               "type": "string",
@@ -375,7 +408,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "createStores"
+        "operationId": "createStore"
       }
     },
     "/stores/{storeId}": {
@@ -420,7 +453,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "getStoreById"
+        "operationId": "getStore"
       },
       "patch": {
         "tags": ["Stores"],
@@ -473,7 +506,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "updateStores"
+        "operationId": "updateStore"
       }
     },
     "/battle-stations": {
@@ -489,6 +522,15 @@
           },
           {
             "name": "academyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false
+          },
+          {
+            "name": "storeId",
             "in": "query",
             "schema": {
               "type": "string",
@@ -571,7 +613,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "createBattleStations"
+        "operationId": "createBattleStation"
       }
     },
     "/battle-stations/{battleStationId}": {
@@ -616,7 +658,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "getBattleStationById"
+        "operationId": "getBattleStation"
       },
       "patch": {
         "tags": ["BattleStations"],
@@ -669,7 +711,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "updateBattleStations"
+        "operationId": "updateBattleStation"
       }
     },
     "/rule-sets": {
@@ -744,7 +786,9 @@
               }
             }
           },
-          "400": { "$ref": "#/components/responses/ValidationError" },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
           },
@@ -764,7 +808,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "createRuleSets"
+        "operationId": "createRuleSet"
       }
     },
     "/rule-sets/{ruleSetId}": {
@@ -809,7 +853,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "getRuleSetById"
+        "operationId": "getRuleSet"
       },
       "patch": {
         "tags": ["RuleSets"],
@@ -862,7 +906,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "patchRuleSetsById"
+        "operationId": "updateRuleSet"
       }
     },
     "/entitlement-profiles": {
@@ -875,6 +919,15 @@
           },
           {
             "$ref": "#/components/parameters/PageSizeParam"
+          },
+          {
+            "name": "academyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false
           }
         ],
         "responses": {
@@ -951,7 +1004,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "createEntitlementProfiles"
+        "operationId": "createEntitlementProfile"
       }
     },
     "/entitlement-profiles/{entitlementProfileId}": {
@@ -996,7 +1049,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "getEntitlementProfileById"
+        "operationId": "getEntitlementProfile"
       },
       "patch": {
         "tags": ["EntitlementProfiles"],
@@ -1049,13 +1102,30 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "updateEntitlementProfiles"
+        "operationId": "updateEntitlementProfile"
       }
     },
     "/currencies": {
       "get": {
         "tags": ["Currencies"],
         "summary": "List currencies",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageParam"
+          },
+          {
+            "$ref": "#/components/parameters/PageSizeParam"
+          },
+          {
+            "name": "academyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false
+          }
+        ],
         "responses": {
           "200": {
             "$ref": "#/components/responses/CurrencyListResponse"
@@ -1093,6 +1163,11 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CurrencyCreate"
+              },
+              "examples": {
+                "default": {
+                  "$ref": "#/components/examples/CurrencyCreateExample"
+                }
               }
             }
           }
@@ -1104,6 +1179,11 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Currency"
+                },
+                "examples": {
+                  "default": {
+                    "$ref": "#/components/examples/CurrencyResponseExample"
+                  }
                 }
               }
             }
@@ -1130,7 +1210,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "createCurrencies"
+        "operationId": "createCurrency"
       }
     },
     "/currencies/{currencyId}": {
@@ -1175,7 +1255,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "getCurrencyById"
+        "operationId": "getCurrency"
       },
       "patch": {
         "tags": ["Currencies"],
@@ -1228,7 +1308,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "updateCurrencies"
+        "operationId": "updateCurrency"
       }
     },
     "/currency-accounts": {
@@ -1236,6 +1316,12 @@
         "tags": ["CurrencyAccounts"],
         "summary": "List currency accounts",
         "parameters": [
+          {
+            "$ref": "#/components/parameters/PageParam"
+          },
+          {
+            "$ref": "#/components/parameters/PageSizeParam"
+          },
           {
             "name": "collectorId",
             "in": "query",
@@ -1320,7 +1406,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "createCurrencyAccounts"
+        "operationId": "createCurrencyAccount"
       }
     },
     "/currency-accounts/{currencyAccountId}": {
@@ -1365,7 +1451,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "getCurrencyAccountById"
+        "operationId": "getCurrencyAccount"
       }
     },
     "/card-collectors": {
@@ -1378,6 +1464,15 @@
           },
           {
             "$ref": "#/components/parameters/PageSizeParam"
+          },
+          {
+            "name": "academyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false
           }
         ],
         "responses": {
@@ -1454,7 +1549,78 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "createCardCollectors"
+        "operationId": "createCardCollector"
+      }
+    },
+    "/card-collectors/summary": {
+      "get": {
+        "tags": ["Collectors"],
+        "summary": "List card collector summaries",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/CardCollectorSummaryListResponse"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "operationId": "listCardCollectorSummaries"
+      }
+    },
+    "/card-collectors/summary/academy/{academyId}": {
+      "get": {
+        "tags": ["Collectors"],
+        "summary": "List card collector summaries for academy",
+        "parameters": [
+          {
+            "name": "academyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/CardCollectorSummaryListResponse"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "operationId": "listCardCollectorSummariesByAcademy"
       }
     },
     "/card-collectors/{collectorId}": {
@@ -1499,7 +1665,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "getCardCollectorById"
+        "operationId": "getCardCollector"
       },
       "patch": {
         "tags": ["Collectors"],
@@ -1552,7 +1718,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "updateCardCollectors"
+        "operationId": "updateCardCollector"
       }
     },
     "/teams": {
@@ -1613,6 +1779,11 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/TeamCreate"
+              },
+              "examples": {
+                "default": {
+                  "$ref": "#/components/examples/TeamCreateExample"
+                }
               }
             }
           }
@@ -1624,6 +1795,11 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Team"
+                },
+                "examples": {
+                  "default": {
+                    "$ref": "#/components/examples/TeamResponseExample"
+                  }
                 }
               }
             }
@@ -1650,7 +1826,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "createTeams"
+        "operationId": "createTeam"
       }
     },
     "/teams/{teamId}": {
@@ -1695,7 +1871,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "getTeamById"
+        "operationId": "getTeam"
       },
       "patch": {
         "tags": ["Teams"],
@@ -1748,7 +1924,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "updateTeamMembershipById"
+        "operationId": "updateTeam"
       }
     },
     "/teams/{teamId}/members": {
@@ -1758,6 +1934,21 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/TeamId"
+          },
+          {
+            "$ref": "#/components/parameters/PageParam"
+          },
+          {
+            "$ref": "#/components/parameters/PageSizeParam"
+          },
+          {
+            "name": "academyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false
           }
         ],
         "responses": {
@@ -1786,7 +1977,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "getTeamsMembers"
+        "operationId": "listTeamMembers"
       },
       "post": {
         "tags": ["Teams"],
@@ -1839,7 +2030,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "createTeamsMembers"
+        "operationId": "addTeamMember"
       }
     },
     "/teams/{teamId}/members/{teamMembershipId}": {
@@ -1897,13 +2088,30 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "updateTeams"
+        "operationId": "updateTeamMembership"
       }
     },
     "/aetherbots": {
       "get": {
         "tags": ["Catalog"],
         "summary": "List aetherbots",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageParam"
+          },
+          {
+            "$ref": "#/components/parameters/PageSizeParam"
+          },
+          {
+            "name": "academyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false
+          }
+        ],
         "responses": {
           "200": {
             "$ref": "#/components/responses/AetherbotListResponse"
@@ -1978,7 +2186,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "createAetherbots"
+        "operationId": "createAetherbot"
       }
     },
     "/aetherbots/{aetherbotId}": {
@@ -2023,7 +2231,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "getAetherbotById"
+        "operationId": "getAetherbot"
       }
     },
     "/aetherbot-cards": {
@@ -2031,6 +2239,12 @@
         "tags": ["Cards"],
         "summary": "List cards",
         "parameters": [
+          {
+            "$ref": "#/components/parameters/PageParam"
+          },
+          {
+            "$ref": "#/components/parameters/PageSizeParam"
+          },
           {
             "name": "ownerCollectorId",
             "in": "query",
@@ -2112,7 +2326,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "getAetherbotCardById"
+        "operationId": "getAetherbotCard"
       }
     },
     "/aetherbot-cards/{cardId}/ownerships": {
@@ -2122,6 +2336,21 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/CardId"
+          },
+          {
+            "$ref": "#/components/parameters/PageParam"
+          },
+          {
+            "$ref": "#/components/parameters/PageSizeParam"
+          },
+          {
+            "name": "academyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false
           }
         ],
         "responses": {
@@ -2150,13 +2379,30 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "getAetherbotCardsOwnerships"
+        "operationId": "listCardOwnershipsByCard"
       }
     },
     "/housing-plans": {
       "get": {
         "tags": ["Housing"],
         "summary": "List housing plans",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageParam"
+          },
+          {
+            "$ref": "#/components/parameters/PageSizeParam"
+          },
+          {
+            "name": "academyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false
+          }
+        ],
         "responses": {
           "200": {
             "$ref": "#/components/responses/HousingPlanListResponse"
@@ -2231,7 +2477,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "createHousingPlans"
+        "operationId": "createHousingPlan"
       }
     },
     "/housing-plans/{housingPlanId}": {
@@ -2276,7 +2522,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "getHousingPlanById"
+        "operationId": "getHousingPlan"
       },
       "patch": {
         "tags": ["Housing"],
@@ -2329,7 +2575,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "updateHousingPlans"
+        "operationId": "updateHousingPlan"
       }
     },
     "/housing-plans/{housingPlanId}/assignments": {
@@ -2339,6 +2585,21 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/HousingPlanId"
+          },
+          {
+            "$ref": "#/components/parameters/PageParam"
+          },
+          {
+            "$ref": "#/components/parameters/PageSizeParam"
+          },
+          {
+            "name": "academyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false
           }
         ],
         "responses": {
@@ -2367,7 +2628,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "getHousingPlansAssignments"
+        "operationId": "listHousingAssignmentsForPlan"
       },
       "post": {
         "tags": ["Housing"],
@@ -2420,14 +2681,18 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "createHousingPlansAssignments"
+        "operationId": "createHousingAssignment"
       }
     },
     "/housing-assignments/{assignmentId}": {
       "patch": {
         "tags": ["Housing"],
         "summary": "Update housing assignment (end/cancel)",
-        "parameters": [{ "$ref": "#/components/parameters/AssignmentId" }],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/AssignmentId"
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -2471,13 +2736,30 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "updateHousingAssignments"
+        "operationId": "updateHousingAssignment"
       }
     },
     "/allowance-plans": {
       "get": {
         "tags": ["Allowance"],
         "summary": "List allowance plans",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageParam"
+          },
+          {
+            "$ref": "#/components/parameters/PageSizeParam"
+          },
+          {
+            "name": "academyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false
+          }
+        ],
         "responses": {
           "200": {
             "$ref": "#/components/responses/AllowancePlanListResponse"
@@ -2552,7 +2834,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "createAllowancePlans"
+        "operationId": "createAllowancePlan"
       }
     },
     "/allowance-plans/{allowancePlanId}": {
@@ -2597,7 +2879,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "getAllowancePlanById"
+        "operationId": "getAllowancePlan"
       },
       "patch": {
         "tags": ["Allowance"],
@@ -2650,7 +2932,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "updateAllowancePlans"
+        "operationId": "updateAllowancePlan"
       }
     },
     "/allowance-plans/{allowancePlanId}/enrollments": {
@@ -2660,6 +2942,12 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/AllowancePlanId"
+          },
+          {
+            "$ref": "#/components/parameters/PageParam"
+          },
+          {
+            "$ref": "#/components/parameters/PageSizeParam"
           }
         ],
         "responses": {
@@ -2688,7 +2976,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "getAllowancePlansEnrollments"
+        "operationId": "listAllowanceEnrollmentsForPlan"
       },
       "post": {
         "tags": ["Allowance"],
@@ -2741,14 +3029,18 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "createAllowancePlansEnrollments"
+        "operationId": "createAllowanceEnrollment"
       }
     },
     "/allowance-enrollments/{enrollmentId}": {
       "patch": {
         "tags": ["Allowance"],
         "summary": "Update enrollment (end/cancel)",
-        "parameters": [{ "$ref": "#/components/parameters/EnrollmentId" }],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/EnrollmentId"
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -2792,7 +3084,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "updateAllowanceEnrollments"
+        "operationId": "updateAllowanceEnrollment"
       }
     },
     "/inventory-items": {
@@ -2800,6 +3092,12 @@
         "tags": ["Inventory"],
         "summary": "List inventory items",
         "parameters": [
+          {
+            "$ref": "#/components/parameters/PageParam"
+          },
+          {
+            "$ref": "#/components/parameters/PageSizeParam"
+          },
           {
             "name": "storeId",
             "in": "query",
@@ -2884,7 +3182,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "createInventoryItems"
+        "operationId": "createInventoryItem"
       }
     },
     "/inventory-items/{inventoryItemId}": {
@@ -2929,7 +3227,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "getInventoryItemById"
+        "operationId": "getInventoryItem"
       },
       "patch": {
         "tags": ["Inventory"],
@@ -2982,13 +3280,30 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "updateInventoryItems"
+        "operationId": "updateInventoryItem"
       }
     },
     "/packs": {
       "get": {
         "tags": ["Packs"],
         "summary": "List packs",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageParam"
+          },
+          {
+            "$ref": "#/components/parameters/PageSizeParam"
+          },
+          {
+            "name": "academyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false
+          }
+        ],
         "responses": {
           "200": {
             "$ref": "#/components/responses/PackListResponse"
@@ -3063,7 +3378,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "createPacks"
+        "operationId": "createPack"
       }
     },
     "/packs/{packId}": {
@@ -3108,7 +3423,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "getPackById"
+        "operationId": "getPack"
       },
       "patch": {
         "tags": ["Packs"],
@@ -3161,7 +3476,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "updatePacks"
+        "operationId": "updatePack"
       }
     },
     "/packs/{packId}/openings": {
@@ -3216,7 +3531,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "createPacksOpenings"
+        "operationId": "openPack"
       }
     },
     "/pack-openings/{packOpeningId}": {
@@ -3261,7 +3576,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "getPackOpenings"
+        "operationId": "getPackOpening"
       }
     },
     "/trades": {
@@ -3269,6 +3584,12 @@
         "tags": ["Trades"],
         "summary": "List trades",
         "parameters": [
+          {
+            "$ref": "#/components/parameters/PageParam"
+          },
+          {
+            "$ref": "#/components/parameters/PageSizeParam"
+          },
           {
             "name": "collectorId",
             "in": "query",
@@ -3316,6 +3637,11 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/TradeCreate"
+              },
+              "examples": {
+                "default": {
+                  "$ref": "#/components/examples/TradeCreateExample"
+                }
               }
             }
           }
@@ -3327,6 +3653,11 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Trade"
+                },
+                "examples": {
+                  "default": {
+                    "$ref": "#/components/examples/TradeResponseExample"
+                  }
                 }
               }
             }
@@ -3353,7 +3684,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "createTrades"
+        "operationId": "createTrade"
       }
     },
     "/trades/{tradeId}": {
@@ -3398,7 +3729,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "getTradeById"
+        "operationId": "getTrade"
       }
     },
     "/trades/{tradeId}/accept": {
@@ -3443,7 +3774,17 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "createTradesAccept"
+        "operationId": "acceptTrade",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptCreate"
+              }
+            }
+          }
+        }
       }
     },
     "/trades/{tradeId}/decline": {
@@ -3488,7 +3829,17 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "createTradesDecline"
+        "operationId": "declineTrade",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeclineCreate"
+              }
+            }
+          }
+        }
       }
     },
     "/trades/{tradeId}/cancel": {
@@ -3533,7 +3884,17 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "createTradesCancel"
+        "operationId": "cancelTrade",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelCreate"
+              }
+            }
+          }
+        }
       }
     },
     "/purchase-orders": {
@@ -3541,6 +3902,12 @@
         "tags": ["PurchaseOrders"],
         "summary": "List purchase orders",
         "parameters": [
+          {
+            "$ref": "#/components/parameters/PageParam"
+          },
+          {
+            "$ref": "#/components/parameters/PageSizeParam"
+          },
           {
             "name": "storeId",
             "in": "query",
@@ -3634,7 +4001,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "createPurchaseOrders"
+        "operationId": "createPurchaseOrder"
       }
     },
     "/purchase-orders/{orderId}": {
@@ -3679,13 +4046,30 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "getPurchaseOrderById"
+        "operationId": "getPurchaseOrder"
       }
     },
     "/tournaments": {
       "get": {
         "tags": ["Tournaments"],
         "summary": "List tournaments",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageParam"
+          },
+          {
+            "$ref": "#/components/parameters/PageSizeParam"
+          },
+          {
+            "name": "academyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false
+          }
+        ],
         "responses": {
           "200": {
             "$ref": "#/components/responses/TournamentListResponse"
@@ -3723,6 +4107,11 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/TournamentCreate"
+              },
+              "examples": {
+                "default": {
+                  "$ref": "#/components/examples/TournamentCreateExample"
+                }
               }
             }
           }
@@ -3734,6 +4123,11 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Tournament"
+                },
+                "examples": {
+                  "default": {
+                    "$ref": "#/components/examples/TournamentResponseExample"
+                  }
                 }
               }
             }
@@ -3760,7 +4154,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "createTournaments"
+        "operationId": "createTournament"
       }
     },
     "/tournaments/{tournamentId}": {
@@ -3805,7 +4199,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "getTournamentById"
+        "operationId": "getTournament"
       },
       "patch": {
         "tags": ["Tournaments"],
@@ -3858,7 +4252,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "updateTournaments"
+        "operationId": "updateTournament"
       }
     },
     "/tournaments/{tournamentId}/publish": {
@@ -3903,7 +4297,17 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "createTournamentsPublish"
+        "operationId": "publishTournament",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublishCreate"
+              }
+            }
+          }
+        }
       }
     },
     "/tournaments/{tournamentId}/start": {
@@ -3948,7 +4352,17 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "createTournamentsStart"
+        "operationId": "startTournament",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartCreate"
+              }
+            }
+          }
+        }
       }
     },
     "/tournaments/{tournamentId}/complete": {
@@ -3993,7 +4407,17 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "createTournamentsComplete"
+        "operationId": "completeTournament",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteCreate"
+              }
+            }
+          }
+        }
       }
     },
     "/tournaments/{tournamentId}/cancel": {
@@ -4038,7 +4462,17 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "createTournamentsCancel"
+        "operationId": "cancelTournament",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelCreate"
+              }
+            }
+          }
+        }
       }
     },
     "/tournaments/{tournamentId}/results": {
@@ -4048,6 +4482,12 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/TournamentId"
+          },
+          {
+            "$ref": "#/components/parameters/PageParam"
+          },
+          {
+            "$ref": "#/components/parameters/PageSizeParam"
           }
         ],
         "responses": {
@@ -4076,7 +4516,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "getTournamentsResults"
+        "operationId": "listTournamentResultsForTournament"
       },
       "post": {
         "tags": ["Tournaments"],
@@ -4129,13 +4569,30 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "createTournamentsResults"
+        "operationId": "submitTournamentResult"
       }
     },
     "/league-seasons": {
       "get": {
         "tags": ["League"],
         "summary": "List league seasons",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageParam"
+          },
+          {
+            "$ref": "#/components/parameters/PageSizeParam"
+          },
+          {
+            "name": "academyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false
+          }
+        ],
         "responses": {
           "200": {
             "$ref": "#/components/responses/LeagueSeasonListResponse"
@@ -4210,7 +4667,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "createLeagueSeasons"
+        "operationId": "createLeagueSeason"
       }
     },
     "/league-seasons/{leagueSeasonId}": {
@@ -4255,7 +4712,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "getLeagueSeasonById"
+        "operationId": "getLeagueSeason"
       },
       "patch": {
         "tags": ["League"],
@@ -4308,7 +4765,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "updateLeagueSeasons"
+        "operationId": "updateLeagueSeason"
       }
     },
     "/league-seasons/{leagueSeasonId}/standings": {
@@ -4318,6 +4775,12 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/LeagueSeasonId"
+          },
+          {
+            "$ref": "#/components/parameters/PageParam"
+          },
+          {
+            "$ref": "#/components/parameters/PageSizeParam"
           }
         ],
         "responses": {
@@ -4346,13 +4809,30 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "getLeagueSeasonsStandings"
+        "operationId": "listLeagueSeasonStandings"
       }
     },
     "/events": {
       "get": {
         "tags": ["Events"],
         "summary": "List events",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageParam"
+          },
+          {
+            "$ref": "#/components/parameters/PageSizeParam"
+          },
+          {
+            "name": "academyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false
+          }
+        ],
         "responses": {
           "200": {
             "$ref": "#/components/responses/EventListResponse"
@@ -4427,7 +4907,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "createEvents"
+        "operationId": "createEvent"
       }
     },
     "/events/{eventId}": {
@@ -4472,7 +4952,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "getEventById"
+        "operationId": "getEvent"
       },
       "patch": {
         "tags": ["Events"],
@@ -4525,7 +5005,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "updateEvents"
+        "operationId": "updateEvent"
       }
     },
     "/events/{eventId}/schedule": {
@@ -4570,7 +5050,17 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "createEventsSchedule"
+        "operationId": "scheduleEvent",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScheduleCreate"
+              }
+            }
+          }
+        }
       }
     },
     "/events/{eventId}/cancel": {
@@ -4615,7 +5105,17 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "createEventsCancel"
+        "operationId": "cancelEvent",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelCreate"
+              }
+            }
+          }
+        }
       }
     },
     "/events/{eventId}/participations": {
@@ -4625,6 +5125,12 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/EventId"
+          },
+          {
+            "$ref": "#/components/parameters/PageParam"
+          },
+          {
+            "$ref": "#/components/parameters/PageSizeParam"
           }
         ],
         "responses": {
@@ -4653,7 +5159,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "getEventsParticipations"
+        "operationId": "listEventParticipations"
       },
       "post": {
         "tags": ["Events"],
@@ -4706,7 +5212,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "createEventsParticipations"
+        "operationId": "registerEventParticipation"
       }
     },
     "/event-participations/{participationId}": {
@@ -4761,13 +5267,30 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "updateEventParticipations"
+        "operationId": "updateEventParticipation"
       }
     },
     "/sages": {
       "get": {
         "tags": ["Sages"],
         "summary": "List sages",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageParam"
+          },
+          {
+            "$ref": "#/components/parameters/PageSizeParam"
+          },
+          {
+            "name": "academyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false
+          }
+        ],
         "responses": {
           "200": {
             "$ref": "#/components/responses/SageListResponse"
@@ -4842,7 +5365,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "createSages"
+        "operationId": "createSage"
       }
     },
     "/sages/{sageId}": {
@@ -4887,7 +5410,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "getSageById"
+        "operationId": "getSage"
       },
       "patch": {
         "tags": ["Sages"],
@@ -4940,14 +5463,18 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "updateSages"
+        "operationId": "updateSage"
       }
     },
     "/card-ownerships/{ownershipId}": {
       "get": {
         "tags": ["Cards"],
         "summary": "Get card ownership record",
-        "parameters": [{ "$ref": "#/components/parameters/OwnershipId" }],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OwnershipId"
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -4981,14 +5508,18 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "getCardOwnershipById"
+        "operationId": "getCardOwnership"
       }
     },
     "/league-standings/{standingId}": {
       "get": {
         "tags": ["League"],
         "summary": "Get league standing",
-        "parameters": [{ "$ref": "#/components/parameters/StandingId" }],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/StandingId"
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -5022,11 +5553,773 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "operationId": "getLeagueStandingsById"
+        "operationId": "getLeagueStanding"
+      }
+    },
+    "/team-memberships": {
+      "get": {
+        "tags": ["Teams"],
+        "summary": "List team memberships (global)",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageParam"
+          },
+          {
+            "$ref": "#/components/parameters/PageSizeParam"
+          },
+          {
+            "name": "teamId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false
+          },
+          {
+            "name": "collectorId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/TeamMembershipListResponse"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "operationId": "listTeamMemberships"
+      }
+    },
+    "/card-ownerships": {
+      "get": {
+        "tags": ["Cards"],
+        "summary": "List card ownership records (global)",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageParam"
+          },
+          {
+            "$ref": "#/components/parameters/PageSizeParam"
+          },
+          {
+            "name": "cardId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false
+          },
+          {
+            "name": "collectorId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/CardOwnershipListResponse"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "operationId": "listCardOwnerships"
+      }
+    },
+    "/housing-assignments": {
+      "get": {
+        "tags": ["Housing"],
+        "summary": "List housing assignments (global)",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageParam"
+          },
+          {
+            "$ref": "#/components/parameters/PageSizeParam"
+          },
+          {
+            "name": "housingPlanId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false
+          },
+          {
+            "name": "collectorId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/HousingAssignmentListResponse"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "operationId": "listHousingAssignments"
+      }
+    },
+    "/allowance-enrollments": {
+      "get": {
+        "tags": ["Allowance"],
+        "summary": "List allowance enrollments (global)",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageParam"
+          },
+          {
+            "$ref": "#/components/parameters/PageSizeParam"
+          },
+          {
+            "name": "allowancePlanId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false
+          },
+          {
+            "name": "collectorId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AllowanceEnrollmentListResponse"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "operationId": "listAllowanceEnrollments"
+      }
+    },
+    "/pack-openings": {
+      "get": {
+        "tags": ["Packs"],
+        "summary": "List pack openings (global)",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageParam"
+          },
+          {
+            "$ref": "#/components/parameters/PageSizeParam"
+          },
+          {
+            "name": "packId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false
+          },
+          {
+            "name": "collectorId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/PackOpeningListResponse"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "operationId": "listPackOpenings"
+      }
+    },
+    "/tournament-results": {
+      "get": {
+        "tags": ["Tournaments"],
+        "summary": "List tournament results (global)",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageParam"
+          },
+          {
+            "$ref": "#/components/parameters/PageSizeParam"
+          },
+          {
+            "name": "tournamentId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false
+          },
+          {
+            "name": "teamId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/TournamentResultListResponse"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "operationId": "listTournamentResults"
+      }
+    },
+    "/league-standings": {
+      "get": {
+        "tags": ["League"],
+        "summary": "List league standings (global)",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageParam"
+          },
+          {
+            "$ref": "#/components/parameters/PageSizeParam"
+          },
+          {
+            "name": "leagueSeasonId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false
+          },
+          {
+            "name": "teamId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/LeagueStandingListResponse"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "operationId": "listLeagueStandings"
+      }
+    },
+    "/event-participations": {
+      "get": {
+        "tags": ["Events"],
+        "summary": "List event participations (global)",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageParam"
+          },
+          {
+            "$ref": "#/components/parameters/PageSizeParam"
+          },
+          {
+            "name": "eventId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false
+          },
+          {
+            "name": "collectorId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/EventParticipationListResponse"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "operationId": "listEventParticipationsGlobal"
       }
     }
   },
   "components": {
+    "examples": {
+      "AcademyCreateExample": {
+        "summary": "Create Academy request",
+        "value": {
+          "name": "Aurora North",
+          "description": "Primary academy for northern region",
+          "officialMotto": "Light in Service of Harmony",
+          "address": {
+            "line1": "1 Radiant Way",
+            "city": "Aurora City",
+            "region": "Northern Reach",
+            "country": "Aether Dominion",
+            "postalCode": "AN-1001"
+          },
+          "code": "AUR",
+          "timezone": "America/New_York",
+          "metadata": {
+            "region": "north",
+            "specialization": "arts"
+          },
+          "crestImageUrl": "api/aetherbot-assets/academy-crest/auren-conservatory-crest.jpg",
+          "heroBannerImageUrl": "api/aetherbot-assets/academy-hero/auren-conservatory-college.jpg"
+        }
+      },
+      "AcademyResponseExample": {
+        "summary": "Academy entity",
+        "value": {
+          "academyId": "3f9c2d44-8b6a-4d2e-9c2b-9f7a1a5c1d9e",
+          "name": "Aurora North",
+          "description": "Primary academy for northern region",
+          "officialMotto": "Light in Service of Harmony",
+          "address": {
+            "line1": "1 Radiant Way",
+            "city": "Aurora City",
+            "region": "Northern Reach",
+            "country": "Aether Dominion",
+            "postalCode": "AN-1001"
+          },
+          "code": "AUR",
+          "timezone": "America/New_York",
+          "metadata": {
+            "region": "north",
+            "specialization": "arts"
+          },
+          "crestImageUrl": "api/aetherbot-assets/academy-crest/auren-conservatory-crest.jpg",
+          "heroBannerImageUrl": "api/aetherbot-assets/academy-hero/auren-conservatory-college.jpg",
+          "status": "ACTIVE",
+          "activatedAt": "2025-01-11T08:00:00Z",
+          "createdAt": "2025-01-10T12:00:00Z",
+          "updatedAt": "2025-01-10T12:00:00Z"
+        }
+      },
+      "AcademyListExample": {
+        "summary": "List academies",
+        "value": {
+          "data": [
+            {
+              "academyId": "acad_auren",
+              "name": "Auren Conservatory",
+              "status": "ACTIVE"
+            },
+            {
+              "academyId": "acad_zephyrium",
+              "name": "Zephyrium Drift Academy",
+              "status": "SUSPENDED"
+            }
+          ],
+          "page": {
+            "page": 1,
+            "pageSize": 20,
+            "total": 2,
+            "totalPages": 1
+          }
+        }
+      },
+      "CurrencyCreateExample": {
+        "summary": "Create Currency request",
+        "value": {
+          "academyId": "3f9c2d44-8b6a-4d2e-9c2b-9f7a1a5c1d9e",
+          "code": "ARC",
+          "name": "Arc Shard",
+          "decimals": 2
+        }
+      },
+      "CurrencyResponseExample": {
+        "summary": "Currency entity",
+        "value": {
+          "currencyId": "6d2b8c9f-3a42-4f1e-b3d7-52f0d9b7ac21",
+          "academyId": "3f9c2d44-8b6a-4d2e-9c2b-9f7a1a5c1d9e",
+          "code": "ARC",
+          "name": "Arc Shard",
+          "decimals": 2,
+          "activeFlag": true,
+          "createdAt": "2025-01-10T12:05:00Z",
+          "updatedAt": "2025-01-10T12:05:00Z"
+        }
+      },
+      "CurrencyListExample": {
+        "summary": "List currencies",
+        "value": {
+          "data": [],
+          "page": {
+            "page": 1,
+            "pageSize": 20,
+            "total": 0,
+            "totalPages": 0
+          }
+        }
+      },
+      "TeamCreateExample": {
+        "summary": "Create Team request",
+        "value": {
+          "academyId": "3f9c2d44-8b6a-4d2e-9c2b-9f7a1a5c1d9e",
+          "name": "Nebula Riders"
+        }
+      },
+      "TeamResponseExample": {
+        "summary": "Team entity",
+        "value": {
+          "teamId": "c1b3a7e2-4f65-4d3f-9a16-d9f5c4a7e1b2",
+          "academyId": "3f9c2d44-8b6a-4d2e-9c2b-9f7a1a5c1d9e",
+          "name": "Nebula Riders",
+          "memberCount": 0,
+          "status": "ACTIVE",
+          "createdAt": "2025-01-10T12:10:00Z",
+          "updatedAt": "2025-01-10T12:10:00Z"
+        }
+      },
+      "TeamListExample": {
+        "summary": "List teams",
+        "value": {
+          "data": [],
+          "page": {
+            "page": 1,
+            "pageSize": 20,
+            "total": 0,
+            "totalPages": 0
+          }
+        }
+      },
+      "TradeCreateExample": {
+        "summary": "Create Trade request",
+        "value": {
+          "fromCollectorId": "4a1d2c3b-5e6f-4a7b-8c9d-1e2f3a4b5c6d",
+          "toCollectorId": "5b2e3d4c-6f7a-4b8c-9d1e-2f3a4b5c6d7e",
+          "offeredCardIds": ["a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"],
+          "requestedCardIds": ["b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e"]
+        }
+      },
+      "TradeResponseExample": {
+        "summary": "Trade entity",
+        "value": {
+          "tradeId": "d4e5f6a7-b8c9-4d0e-9f1a-2b3c4d5e6f70",
+          "fromCollectorId": "4a1d2c3b-5e6f-4a7b-8c9d-1e2f3a4b5c6d",
+          "toCollectorId": "5b2e3d4c-6f7a-4b8c-9d1e-2f3a4b5c6d7e",
+          "offeredCardIds": ["a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"],
+          "requestedCardIds": ["b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e"],
+          "createdDateTime": "2025-01-10T12:30:00Z",
+          "status": "PENDING",
+          "updatedAt": "2025-01-10T12:45:00Z",
+          "expiresAt": "2025-01-17T12:30:00Z"
+        }
+      },
+      "TradeListExample": {
+        "summary": "List trades",
+        "value": {
+          "data": [],
+          "page": {
+            "page": 1,
+            "pageSize": 20,
+            "total": 0,
+            "totalPages": 0
+          }
+        }
+      },
+      "TournamentCreateExample": {
+        "summary": "Create Tournament request",
+        "value": {
+          "academyId": "3f9c2d44-8b6a-4d2e-9c2b-9f7a1a5c1d9e",
+          "name": "Spring Invitational",
+          "seasonYear": 2025,
+          "type": "MAJOR_A",
+          "startDate": "2025-03-01T15:00:00Z",
+          "endDate": "2025-03-07T22:00:00Z"
+        }
+      },
+      "TournamentResponseExample": {
+        "summary": "Tournament entity",
+        "value": {
+          "tournamentId": "e6f7a8b9-c0d1-4e2f-9a3b-4c5d6e7f8a90",
+          "academyId": "3f9c2d44-8b6a-4d2e-9c2b-9f7a1a5c1d9e",
+          "name": "Spring Invitational",
+          "seasonYear": 2025,
+          "type": "MAJOR_A",
+          "startDate": "2025-03-01T15:00:00Z",
+          "endDate": "2025-03-07T22:00:00Z",
+          "status": "DRAFT",
+          "createdAt": "2025-01-10T12:40:00Z",
+          "updatedAt": "2025-01-10T12:45:00Z"
+        }
+      },
+      "TournamentListExample": {
+        "summary": "List tournaments",
+        "value": {
+          "data": [],
+          "page": {
+            "page": 1,
+            "pageSize": 20,
+            "total": 0,
+            "totalPages": 0
+          }
+        }
+      },
+      "UnauthorizedErrorExample": {
+        "summary": "Unauthorized error",
+        "value": {
+          "error": {
+            "code": "UNAUTHORIZED",
+            "message": "Authentication token missing or invalid",
+            "traceId": "0f1e2d3c-4b5a-6789-8a7b-6c5d4e3f2a10"
+          }
+        }
+      },
+      "ForbiddenErrorExample": {
+        "summary": "Forbidden error",
+        "value": {
+          "error": {
+            "code": "FORBIDDEN",
+            "message": "You do not have permission to access this resource",
+            "traceId": "1a2b3c4d-5e6f-7081-92a3-b4c5d6e7f801"
+          }
+        }
+      },
+      "NotFoundErrorExample": {
+        "summary": "Not found error",
+        "value": {
+          "error": {
+            "code": "NOT_FOUND",
+            "message": "Requested resource was not found",
+            "traceId": "2b3c4d5e-6f70-8192-a3b4-c5d6e7f8a901"
+          }
+        }
+      },
+      "ConflictErrorExample": {
+        "summary": "Conflict error",
+        "value": {
+          "error": {
+            "code": "CONFLICT",
+            "message": "Resource is in a conflicting state",
+            "traceId": "3c4d5e6f-7081-92a3-b4c5-d6e7f8a9b012"
+          }
+        }
+      },
+      "ValidationErrorExample": {
+        "summary": "Validation error",
+        "value": {
+          "error": {
+            "code": "VALIDATION_ERROR",
+            "message": "One or more fields are invalid",
+            "fieldErrors": [
+              {
+                "field": "name",
+                "message": "Name is required"
+              }
+            ],
+            "traceId": "4d5e6f70-8192-a3b4-c5d6-e7f8a9b0c123"
+          }
+        }
+      },
+      "RateLimitedErrorExample": {
+        "summary": "Rate limited error",
+        "value": {
+          "error": {
+            "code": "RATE_LIMITED",
+            "message": "Too many requests, slow down",
+            "traceId": "5e6f7081-92a3-b4c5-d6e7-f8a9b0c1d234"
+          }
+        }
+      },
+      "InternalErrorExample": {
+        "summary": "Internal error",
+        "value": {
+          "error": {
+            "code": "INTERNAL_ERROR",
+            "message": "Unexpected server error",
+            "traceId": "6f708192-a3b4-c5d6-e7f8-a9b0c1d2e345"
+          }
+        }
+      }
+    },
     "securitySchemes": {
       "bearerAuth": {
         "type": "http",
@@ -5171,32 +6464,17 @@
           "format": "uuid"
         }
       },
-      "HousingAssignmentId": {
-        "name": "assignmentId",
-        "in": "path",
-        "required": true,
-        "schema": {
-          "type": "string",
-          "format": "uuid"
-        }
-      },
       "AssignmentId": {
         "name": "assignmentId",
         "in": "path",
         "required": true,
-        "schema": { "type": "string", "format": "uuid" }
-      },
-      "AllowancePlanId": {
-        "name": "allowancePlanId",
-        "in": "path",
-        "required": true,
         "schema": {
           "type": "string",
           "format": "uuid"
         }
       },
-      "AllowanceEnrollmentId": {
-        "name": "enrollmentId",
+      "AllowancePlanId": {
+        "name": "allowancePlanId",
         "in": "path",
         "required": true,
         "schema": {
@@ -5208,7 +6486,10 @@
         "name": "enrollmentId",
         "in": "path",
         "required": true,
-        "schema": { "type": "string", "format": "uuid" }
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
       },
       "InventoryItemId": {
         "name": "inventoryItemId",
@@ -5304,13 +6585,19 @@
         "name": "ownershipId",
         "in": "path",
         "required": true,
-        "schema": { "type": "string", "format": "uuid" }
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
       },
       "StandingId": {
         "name": "standingId",
         "in": "path",
         "required": true,
-        "schema": { "type": "string", "format": "uuid" }
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
       }
     },
     "responses": {
@@ -5320,6 +6607,11 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "examples": {
+              "default": {
+                "$ref": "#/components/examples/UnauthorizedErrorExample"
+              }
             }
           }
         }
@@ -5330,6 +6622,11 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "examples": {
+              "default": {
+                "$ref": "#/components/examples/ForbiddenErrorExample"
+              }
             }
           }
         }
@@ -5340,6 +6637,11 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "examples": {
+              "default": {
+                "$ref": "#/components/examples/NotFoundErrorExample"
+              }
             }
           }
         }
@@ -5350,6 +6652,11 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "examples": {
+              "default": {
+                "$ref": "#/components/examples/ConflictErrorExample"
+              }
             }
           }
         }
@@ -5360,6 +6667,11 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/ValidationErrorResponse"
+            },
+            "examples": {
+              "default": {
+                "$ref": "#/components/examples/ValidationErrorExample"
+              }
             }
           }
         }
@@ -5368,7 +6680,14 @@
         "description": "Too many requests",
         "content": {
           "application/json": {
-            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "examples": {
+              "default": {
+                "$ref": "#/components/examples/RateLimitedErrorExample"
+              }
+            }
           }
         }
       },
@@ -5376,7 +6695,14 @@
         "description": "Internal server error",
         "content": {
           "application/json": {
-            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "examples": {
+              "default": {
+                "$ref": "#/components/examples/InternalErrorExample"
+              }
+            }
           }
         }
       },
@@ -5386,6 +6712,11 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/AcademyListEnvelope"
+            },
+            "examples": {
+              "default": {
+                "$ref": "#/components/examples/AcademyListExample"
+              }
             }
           }
         }
@@ -5396,6 +6727,19 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/StoreListEnvelope"
+            },
+            "examples": {
+              "default": {
+                "value": {
+                  "data": [],
+                  "page": {
+                    "page": 1,
+                    "pageSize": 20,
+                    "total": 0,
+                    "totalPages": 0
+                  }
+                }
+              }
             }
           }
         }
@@ -5406,6 +6750,19 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/BattleStationListEnvelope"
+            },
+            "examples": {
+              "default": {
+                "value": {
+                  "data": [],
+                  "page": {
+                    "page": 1,
+                    "pageSize": 20,
+                    "total": 1,
+                    "totalPages": 1
+                  }
+                }
+              }
             }
           }
         }
@@ -5416,6 +6773,19 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/RuleSetListEnvelope"
+            },
+            "examples": {
+              "default": {
+                "value": {
+                  "data": [],
+                  "page": {
+                    "page": 1,
+                    "pageSize": 20,
+                    "total": 1,
+                    "totalPages": 1
+                  }
+                }
+              }
             }
           }
         }
@@ -5426,6 +6796,19 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/EntitlementProfileListEnvelope"
+            },
+            "examples": {
+              "default": {
+                "value": {
+                  "data": [],
+                  "page": {
+                    "page": 1,
+                    "pageSize": 20,
+                    "total": 1,
+                    "totalPages": 1
+                  }
+                }
+              }
             }
           }
         }
@@ -5436,6 +6819,11 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/CurrencyListEnvelope"
+            },
+            "examples": {
+              "default": {
+                "$ref": "#/components/examples/CurrencyListExample"
+              }
             }
           }
         }
@@ -5446,6 +6834,19 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/CurrencyAccountListEnvelope"
+            },
+            "examples": {
+              "default": {
+                "value": {
+                  "data": [],
+                  "page": {
+                    "page": 1,
+                    "pageSize": 20,
+                    "total": 1,
+                    "totalPages": 1
+                  }
+                }
+              }
             }
           }
         }
@@ -5456,6 +6857,46 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/CardCollectorListEnvelope"
+            },
+            "examples": {
+              "default": {
+                "value": {
+                  "data": [],
+                  "page": {
+                    "page": 1,
+                    "pageSize": 20,
+                    "total": 1,
+                    "totalPages": 1
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "CardCollectorSummaryListResponse": {
+        "description": "OK",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/CardCollectorSummaryListEnvelope"
+            },
+            "examples": {
+              "default": {
+                "value": {
+                  "data": [
+                    {
+                      "collectorId": "3f9c2d44-8b6a-4d2e-9c2b-9f7a1a5c1d9e",
+                      "userName": "Aurora Weaver",
+                      "name": "Aurora Chen",
+                      "avatarImageUrl": "/api/aetherbot-assets/card-collector-avatars/female-1.jpg",
+                      "status": "ACTIVE",
+                      "createdAt": "2024-01-15T08:30:00Z",
+                      "academyId": "acad_auren"
+                    }
+                  ]
+                }
+              }
             }
           }
         }
@@ -5466,6 +6907,11 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/TeamListEnvelope"
+            },
+            "examples": {
+              "default": {
+                "$ref": "#/components/examples/TeamListExample"
+              }
             }
           }
         }
@@ -5476,6 +6922,19 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/TeamMembershipListEnvelope"
+            },
+            "examples": {
+              "default": {
+                "value": {
+                  "data": [],
+                  "page": {
+                    "page": 1,
+                    "pageSize": 20,
+                    "total": 1,
+                    "totalPages": 1
+                  }
+                }
+              }
             }
           }
         }
@@ -5486,6 +6945,19 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/AetherbotListEnvelope"
+            },
+            "examples": {
+              "default": {
+                "value": {
+                  "data": [],
+                  "page": {
+                    "page": 1,
+                    "pageSize": 20,
+                    "total": 1,
+                    "totalPages": 1
+                  }
+                }
+              }
             }
           }
         }
@@ -5496,6 +6968,19 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/AetherbotCardListEnvelope"
+            },
+            "examples": {
+              "default": {
+                "value": {
+                  "data": [],
+                  "page": {
+                    "page": 1,
+                    "pageSize": 20,
+                    "total": 1,
+                    "totalPages": 1
+                  }
+                }
+              }
             }
           }
         }
@@ -5506,6 +6991,19 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/CardOwnershipListEnvelope"
+            },
+            "examples": {
+              "default": {
+                "value": {
+                  "data": [],
+                  "page": {
+                    "page": 1,
+                    "pageSize": 20,
+                    "total": 1,
+                    "totalPages": 1
+                  }
+                }
+              }
             }
           }
         }
@@ -5516,6 +7014,19 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/HousingPlanListEnvelope"
+            },
+            "examples": {
+              "default": {
+                "value": {
+                  "data": [],
+                  "page": {
+                    "page": 1,
+                    "pageSize": 20,
+                    "total": 1,
+                    "totalPages": 1
+                  }
+                }
+              }
             }
           }
         }
@@ -5526,6 +7037,19 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/HousingAssignmentListEnvelope"
+            },
+            "examples": {
+              "default": {
+                "value": {
+                  "data": [],
+                  "page": {
+                    "page": 1,
+                    "pageSize": 20,
+                    "total": 1,
+                    "totalPages": 1
+                  }
+                }
+              }
             }
           }
         }
@@ -5536,6 +7060,19 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/AllowancePlanListEnvelope"
+            },
+            "examples": {
+              "default": {
+                "value": {
+                  "data": [],
+                  "page": {
+                    "page": 1,
+                    "pageSize": 20,
+                    "total": 1,
+                    "totalPages": 1
+                  }
+                }
+              }
             }
           }
         }
@@ -5546,6 +7083,19 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/AllowanceEnrollmentListEnvelope"
+            },
+            "examples": {
+              "default": {
+                "value": {
+                  "data": [],
+                  "page": {
+                    "page": 1,
+                    "pageSize": 20,
+                    "total": 1,
+                    "totalPages": 1
+                  }
+                }
+              }
             }
           }
         }
@@ -5556,6 +7106,19 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/InventoryItemListEnvelope"
+            },
+            "examples": {
+              "default": {
+                "value": {
+                  "data": [],
+                  "page": {
+                    "page": 1,
+                    "pageSize": 20,
+                    "total": 0,
+                    "totalPages": 0
+                  }
+                }
+              }
             }
           }
         }
@@ -5566,6 +7129,19 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/PackListEnvelope"
+            },
+            "examples": {
+              "default": {
+                "value": {
+                  "data": [],
+                  "page": {
+                    "page": 1,
+                    "pageSize": 20,
+                    "total": 1,
+                    "totalPages": 1
+                  }
+                }
+              }
             }
           }
         }
@@ -5576,6 +7152,11 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/TradeListEnvelope"
+            },
+            "examples": {
+              "default": {
+                "$ref": "#/components/examples/TradeListExample"
+              }
             }
           }
         }
@@ -5586,6 +7167,19 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/PurchaseOrderListEnvelope"
+            },
+            "examples": {
+              "default": {
+                "value": {
+                  "data": [],
+                  "page": {
+                    "page": 1,
+                    "pageSize": 20,
+                    "total": 1,
+                    "totalPages": 1
+                  }
+                }
+              }
             }
           }
         }
@@ -5596,6 +7190,11 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/TournamentListEnvelope"
+            },
+            "examples": {
+              "default": {
+                "$ref": "#/components/examples/TournamentListExample"
+              }
             }
           }
         }
@@ -5606,6 +7205,19 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/TournamentResultListEnvelope"
+            },
+            "examples": {
+              "default": {
+                "value": {
+                  "data": [],
+                  "page": {
+                    "page": 1,
+                    "pageSize": 20,
+                    "total": 1,
+                    "totalPages": 1
+                  }
+                }
+              }
             }
           }
         }
@@ -5616,6 +7228,19 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/LeagueSeasonListEnvelope"
+            },
+            "examples": {
+              "default": {
+                "value": {
+                  "data": [],
+                  "page": {
+                    "page": 1,
+                    "pageSize": 20,
+                    "total": 1,
+                    "totalPages": 1
+                  }
+                }
+              }
             }
           }
         }
@@ -5626,6 +7251,19 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/LeagueStandingListEnvelope"
+            },
+            "examples": {
+              "default": {
+                "value": {
+                  "data": [],
+                  "page": {
+                    "page": 1,
+                    "pageSize": 20,
+                    "total": 1,
+                    "totalPages": 1
+                  }
+                }
+              }
             }
           }
         }
@@ -5636,6 +7274,19 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/EventListEnvelope"
+            },
+            "examples": {
+              "default": {
+                "value": {
+                  "data": [],
+                  "page": {
+                    "page": 1,
+                    "pageSize": 20,
+                    "total": 1,
+                    "totalPages": 1
+                  }
+                }
+              }
             }
           }
         }
@@ -5646,6 +7297,19 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/EventParticipationListEnvelope"
+            },
+            "examples": {
+              "default": {
+                "value": {
+                  "data": [],
+                  "page": {
+                    "page": 1,
+                    "pageSize": 20,
+                    "total": 1,
+                    "totalPages": 1
+                  }
+                }
+              }
             }
           }
         }
@@ -5656,12 +7320,56 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/SageListEnvelope"
+            },
+            "examples": {
+              "default": {
+                "value": {
+                  "data": [],
+                  "page": {
+                    "page": 1,
+                    "pageSize": 20,
+                    "total": 1,
+                    "totalPages": 1
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "PackOpeningListResponse": {
+        "description": "OK",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PackOpeningListEnvelope"
+            },
+            "examples": {
+              "default": {
+                "value": {
+                  "data": [],
+                  "page": {
+                    "page": 1,
+                    "pageSize": 20,
+                    "total": 1,
+                    "totalPages": 1
+                  }
+                }
+              }
             }
           }
         }
       }
     },
     "schemas": {
+      "PagedListBase": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "$ref": "#/components/schemas/PageMetadata"
+          }
+        }
+      },
       "PageMetadata": {
         "type": "object",
         "properties": {
@@ -5683,6 +7391,19 @@
         "type": "object",
         "required": ["code", "message"],
         "properties": {
+          "type": {
+            "type": "string",
+            "description": "Problem type URI (RFC 9457 style)"
+          },
+          "title": {
+            "type": "string",
+            "description": "Short, human-readable summary"
+          },
+          "status": {
+            "type": "integer",
+            "minimum": 100,
+            "maximum": 599
+          },
           "code": {
             "type": "string",
             "enum": [
@@ -5698,13 +7419,21 @@
           "message": {
             "type": "string"
           },
-          "details": {
+          "detail": {
             "type": "string",
+            "description": "Detailed explanation (alias for message in ProblemDetails)",
             "nullable": true
           },
           "traceId": {
             "type": "string",
             "nullable": true
+          },
+          "errors": {
+            "type": "array",
+            "description": "Optional list of granular error details",
+            "items": {
+              "$ref": "#/components/schemas/FieldError"
+            }
           }
         }
       },
@@ -5756,19 +7485,42 @@
           }
         }
       },
-      "AcademyListEnvelope": {
+      "AcademySummary": {
         "type": "object",
+        "required": ["academyId", "name", "status"],
         "properties": {
-          "data": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Academy"
-            }
+          "academyId": {
+            "type": "string",
+            "description": "Unique identifier for the academy"
           },
-          "page": {
-            "$ref": "#/components/schemas/PageMetadata"
+          "name": {
+            "type": "string",
+            "description": "Display name for the academy"
+          },
+          "status": {
+            "type": "string",
+            "description": "Lifecycle status for the academy",
+            "enum": ["DRAFT", "ACTIVE", "SUSPENDED", "ARCHIVED"]
           }
         }
+      },
+      "AcademyListEnvelope": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PagedListBase"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/AcademySummary"
+                }
+              }
+            }
+          }
+        ]
       },
       "StoreListEnvelope": {
         "type": "object",
@@ -5868,19 +7620,34 @@
           }
         }
       },
-      "TeamListEnvelope": {
+      "CardCollectorSummaryListEnvelope": {
         "type": "object",
         "properties": {
           "data": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Team"
+              "$ref": "#/components/schemas/CardCollectorSummary"
             }
-          },
-          "page": {
-            "$ref": "#/components/schemas/PageMetadata"
           }
         }
+      },
+      "TeamListEnvelope": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PagedListBase"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Team"
+                }
+              }
+            }
+          }
+        ]
       },
       "TeamMembershipListEnvelope": {
         "type": "object",
@@ -6078,6 +7845,20 @@
           }
         }
       },
+      "PackOpeningListEnvelope": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PackOpening"
+            }
+          },
+          "page": {
+            "$ref": "#/components/schemas/PageMetadata"
+          }
+        }
+      },
       "LeagueSeasonListEnvelope": {
         "type": "object",
         "properties": {
@@ -6148,21 +7929,100 @@
           }
         }
       },
-      "AcademyBase": {
+      "AcademyAddress": {
         "type": "object",
-        "required": ["name", "region", "timezone"],
+        "required": ["line1", "city", "country"],
         "properties": {
-          "name": {
-            "type": "string"
+          "line1": {
+            "type": "string",
+            "description": "Primary address line"
+          },
+          "line2": {
+            "type": "string",
+            "description": "Secondary address line",
+            "nullable": true
+          },
+          "city": {
+            "type": "string",
+            "description": "City or locality"
           },
           "region": {
-            "type": "string"
+            "type": "string",
+            "description": "State, province, or regional subdivision",
+            "nullable": true
           },
-          "timezone": {
-            "type": "string"
+          "country": {
+            "type": "string",
+            "description": "Country or sovereign territory"
+          },
+          "postalCode": {
+            "type": "string",
+            "description": "Postal or ZIP code",
+            "nullable": true
+          }
+        }
+      },
+      "AcademyBase": {
+        "type": "object",
+        "required": [
+          "name",
+          "description",
+          "officialMotto",
+          "address",
+          "timezone",
+          "crestImageUrl",
+          "heroBannerImageUrl"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Display name for the academy"
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "description": "Narrative summary describing the academy"
+          },
+          "officialMotto": {
+            "type": "string",
+            "description": "Official motto or rallying phrase for the academy"
+          },
+          "address": {
+            "$ref": "#/components/schemas/AcademyAddress"
+          },
+          "code": {
+            "type": "string",
+            "description": "Optional short code used for referencing the academy"
+          },
+          "timezone": {
+            "type": "string",
+            "description": "IANA timezone identifier for the academy's primary operations"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Arbitrary metadata for downstream systems",
+            "additionalProperties": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
+            }
+          },
+          "crestImageUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "Public URL for the academy crest image"
+          },
+          "heroBannerImageUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "Public URL for the hero banner image"
           }
         }
       },
@@ -6181,7 +8041,7 @@
               },
               "status": {
                 "type": "string",
-                "enum": ["ACTIVE", "INACTIVE"]
+                "enum": ["DRAFT", "ACTIVE", "SUSPENDED", "ARCHIVED"]
               },
               "createdAt": {
                 "type": "string",
@@ -6190,6 +8050,12 @@
               "updatedAt": {
                 "type": "string",
                 "format": "date-time"
+              },
+              "activatedAt": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true,
+                "description": "Timestamp indicating when the academy became active"
               }
             }
           }
@@ -6204,18 +8070,48 @@
           "name": {
             "type": "string"
           },
-          "region": {
+          "description": {
+            "type": "string"
+          },
+          "officialMotto": {
+            "type": "string"
+          },
+          "address": {
+            "$ref": "#/components/schemas/AcademyAddress"
+          },
+          "code": {
             "type": "string"
           },
           "timezone": {
             "type": "string"
           },
-          "description": {
-            "type": "string"
+          "metadata": {
+            "type": "object",
+            "additionalProperties": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
+            }
+          },
+          "crestImageUrl": {
+            "type": "string",
+            "format": "uri"
+          },
+          "heroBannerImageUrl": {
+            "type": "string",
+            "format": "uri"
           },
           "status": {
             "type": "string",
-            "enum": ["ACTIVE", "INACTIVE"]
+            "enum": ["DRAFT", "ACTIVE", "SUSPENDED", "ARCHIVED"]
           }
         }
       },
@@ -6513,9 +8409,13 @@
       },
       "EntitlementProfile": {
         "type": "object",
-        "required": ["entitlementProfileId", "name", "status"],
+        "required": ["entitlementProfileId", "academyId", "name", "status"],
         "properties": {
           "entitlementProfileId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "academyId": {
             "type": "string",
             "format": "uuid"
           },
@@ -6544,8 +8444,12 @@
       },
       "EntitlementProfileCreate": {
         "type": "object",
-        "required": ["name"],
+        "required": ["academyId", "name"],
         "properties": {
+          "academyId": {
+            "type": "string",
+            "format": "uuid"
+          },
           "name": {
             "type": "string"
           },
@@ -6577,14 +8481,7 @@
       },
       "Currency": {
         "type": "object",
-        "required": [
-          "currencyId",
-          "academyId",
-          "code",
-          "name",
-          "decimals",
-          "activeFlag"
-        ],
+        "required": ["currencyId", "academyId", "code", "name", "decimals", "activeFlag"],
         "properties": {
           "currencyId": {
             "type": "string",
@@ -6703,14 +8600,58 @@
           }
         }
       },
+      "CardCollectorSummary": {
+        "type": "object",
+        "required": [
+          "collectorId",
+          "userName",
+          "name",
+          "avatarImageUrl",
+          "status",
+          "createdAt",
+          "academyId"
+        ],
+        "properties": {
+          "collectorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userName": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "avatarImageUrl": {
+            "type": "string",
+            "format": "uri"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["ACTIVE", "SUSPENDED", "RETIRED"]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "academyId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
       "CardCollector": {
         "type": "object",
         "required": [
           "collectorId",
           "handle",
-          "displayName",
+          "userName",
+          "name",
+          "gender",
+          "avatarImageUrl",
           "joinDate",
-          "status"
+          "status",
+          "academyId"
         ],
         "properties": {
           "collectorId": {
@@ -6720,8 +8661,19 @@
           "handle": {
             "type": "string"
           },
-          "displayName": {
+          "userName": {
             "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "gender": {
+            "type": "string",
+            "enum": ["male", "female", "na"]
+          },
+          "avatarImageUrl": {
+            "type": "string",
+            "format": "uri"
           },
           "joinDate": {
             "type": "string",
@@ -6741,26 +8693,52 @@
           "updatedAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "academyId": {
+            "type": "string",
+            "format": "uuid"
           }
         }
       },
       "CardCollectorCreate": {
         "type": "object",
-        "required": ["handle", "displayName"],
+        "required": ["handle", "userName", "name", "gender"],
         "properties": {
           "handle": {
             "type": "string"
           },
-          "displayName": {
+          "userName": {
             "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "gender": {
+            "type": "string",
+            "enum": ["male", "female", "na"]
+          },
+          "avatarImageUrl": {
+            "type": "string",
+            "format": "uri"
           }
         }
       },
       "CardCollectorUpdate": {
         "type": "object",
         "properties": {
-          "displayName": {
+          "userName": {
             "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "gender": {
+            "type": "string",
+            "enum": ["male", "female", "na"]
+          },
+          "avatarImageUrl": {
+            "type": "string",
+            "format": "uri"
           },
           "rank": {
             "type": "string"
@@ -7300,14 +9278,7 @@
       },
       "AllowancePlanCreate": {
         "type": "object",
-        "required": [
-          "academyId",
-          "name",
-          "cycle",
-          "creditAmount",
-          "type",
-          "startDate"
-        ],
+        "required": ["academyId", "name", "cycle", "creditAmount", "type", "startDate"],
         "properties": {
           "academyId": {
             "type": "string",
@@ -7542,7 +9513,7 @@
           "packId",
           "name",
           "edition",
-          "rarityMix",
+          "rarityMixProfile",
           "priceCurrencyUnits",
           "status"
         ],
@@ -7562,9 +9533,8 @@
           "edition": {
             "type": "string"
           },
-          "rarityMix": {
-            "type": "object",
-            "additionalProperties": true
+          "rarityMixProfile": {
+            "type": "string"
           },
           "priceCurrencyUnits": {
             "type": "number"
@@ -7595,17 +9565,21 @@
       },
       "PackCreate": {
         "type": "object",
-        "required": ["name", "edition", "rarityMix", "priceCurrencyUnits"],
+        "required": ["name", "edition", "rarityMixProfile", "priceCurrencyUnits"],
         "properties": {
+          "academyId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
           "name": {
             "type": "string"
           },
           "edition": {
             "type": "string"
           },
-          "rarityMix": {
-            "type": "object",
-            "additionalProperties": true
+          "rarityMixProfile": {
+            "type": "string"
           },
           "priceCurrencyUnits": {
             "type": "number"
@@ -7615,6 +9589,9 @@
       "PackUpdate": {
         "type": "object",
         "properties": {
+          "rarityMixProfile": {
+            "type": "string"
+          },
           "status": {
             "type": "string",
             "enum": ["ACTIVE", "INACTIVE", "RETIRED"]
@@ -7645,12 +9622,7 @@
       },
       "PackOpening": {
         "type": "object",
-        "required": [
-          "packOpeningId",
-          "packId",
-          "collectorId",
-          "openedDateTime"
-        ],
+        "required": ["packOpeningId", "packId", "collectorId", "openedDateTime"],
         "properties": {
           "packOpeningId": {
             "type": "string",
@@ -7685,6 +9657,149 @@
             "nullable": true
           }
         }
+      },
+      "ActionRequestMetadata": {
+        "type": "object",
+        "required": ["performedBy"],
+        "properties": {
+          "performedBy": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Identifier of the staff member or system applying the action."
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 512,
+            "nullable": true,
+            "description": "Optional contextual note captured with the action."
+          }
+        },
+        "additionalProperties": false
+      },
+      "ActionRequestWithReason": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ActionRequestMetadata"
+          },
+          {
+            "type": "object",
+            "required": ["reason"],
+            "properties": {
+              "reason": {
+                "type": "string",
+                "maxLength": 512,
+                "description": "Human readable reason describing why the action was requested."
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
+      },
+      "AcceptCreate": {
+        "$ref": "#/components/schemas/ActionRequestMetadata"
+      },
+      "DeclineCreate": {
+        "$ref": "#/components/schemas/ActionRequestWithReason"
+      },
+      "CancelCreate": {
+        "$ref": "#/components/schemas/ActionRequestWithReason"
+      },
+      "PublishCreate": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ActionRequestMetadata"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "registrationOpenDate": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Optional override for when registration should open."
+              },
+              "registrationCloseDate": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Optional override for when registration should close."
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
+      },
+      "StartCreate": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ActionRequestMetadata"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "round": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "Current tournament round to mark as active."
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
+      },
+      "CompleteCreate": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ActionRequestMetadata"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "winnerTeamId": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Team declared as the tournament winner."
+              },
+              "completedAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Timestamp when the competition concluded."
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
+      },
+      "ScheduleCreate": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ActionRequestMetadata"
+          },
+          {
+            "type": "object",
+            "required": ["startDateTime", "endDateTime"],
+            "properties": {
+              "startDateTime": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Event start date/time."
+              },
+              "endDateTime": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Event end date/time."
+              },
+              "location": {
+                "type": "string",
+                "description": "Venue or location details for the scheduled event."
+              },
+              "capacity": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Updated maximum attendee count."
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
       },
       "Trade": {
         "type": "object",
@@ -7858,12 +9973,7 @@
       },
       "PurchaseOrderCreate": {
         "type": "object",
-        "required": [
-          "storeId",
-          "collectorId",
-          "currencyAccountId",
-          "lineItems"
-        ],
+        "required": ["storeId", "collectorId", "currencyAccountId", "lineItems"],
         "properties": {
           "storeId": {
             "type": "string",
@@ -7940,13 +10050,7 @@
           },
           "status": {
             "type": "string",
-            "enum": [
-              "DRAFT",
-              "REG_OPEN",
-              "IN_PROGRESS",
-              "COMPLETED",
-              "CANCELLED"
-            ]
+            "enum": ["DRAFT", "REG_OPEN", "IN_PROGRESS", "COMPLETED", "CANCELLED"]
           },
           "createdAt": {
             "type": "string",
@@ -7960,14 +10064,7 @@
       },
       "TournamentCreate": {
         "type": "object",
-        "required": [
-          "academyId",
-          "name",
-          "seasonYear",
-          "type",
-          "startDate",
-          "endDate"
-        ],
+        "required": ["academyId", "name", "seasonYear", "type", "startDate", "endDate"],
         "properties": {
           "academyId": {
             "type": "string",
@@ -8001,13 +10098,7 @@
           },
           "status": {
             "type": "string",
-            "enum": [
-              "DRAFT",
-              "REG_OPEN",
-              "IN_PROGRESS",
-              "COMPLETED",
-              "CANCELLED"
-            ]
+            "enum": ["DRAFT", "REG_OPEN", "IN_PROGRESS", "COMPLETED", "CANCELLED"]
           }
         }
       },
@@ -8062,6 +10153,7 @@
         "type": "object",
         "required": [
           "leagueSeasonId",
+          "academyId",
           "year",
           "divisionStructureVersion",
           "phase",
@@ -8070,6 +10162,10 @@
         ],
         "properties": {
           "leagueSeasonId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "academyId": {
             "type": "string",
             "format": "uuid"
           },
@@ -8109,6 +10205,7 @@
       "LeagueSeasonCreate": {
         "type": "object",
         "required": [
+          "academyId",
           "year",
           "divisionStructureVersion",
           "phase",
@@ -8116,6 +10213,10 @@
           "endDate"
         ],
         "properties": {
+          "academyId": {
+            "type": "string",
+            "format": "uuid"
+          },
           "year": {
             "type": "integer"
           },
@@ -8235,13 +10336,7 @@
           },
           "status": {
             "type": "string",
-            "enum": [
-              "DRAFT",
-              "SCHEDULED",
-              "IN_PROGRESS",
-              "COMPLETED",
-              "CANCELLED"
-            ]
+            "enum": ["DRAFT", "SCHEDULED", "IN_PROGRESS", "COMPLETED", "CANCELLED"]
           },
           "createdAt": {
             "type": "string",
@@ -8255,13 +10350,7 @@
       },
       "EventCreate": {
         "type": "object",
-        "required": [
-          "academyId",
-          "type",
-          "topic",
-          "startDateTime",
-          "endDateTime"
-        ],
+        "required": ["academyId", "type", "topic", "startDateTime", "endDateTime"],
         "properties": {
           "academyId": {
             "type": "string",
@@ -8292,25 +10381,13 @@
           },
           "status": {
             "type": "string",
-            "enum": [
-              "DRAFT",
-              "SCHEDULED",
-              "IN_PROGRESS",
-              "COMPLETED",
-              "CANCELLED"
-            ]
+            "enum": ["DRAFT", "SCHEDULED", "IN_PROGRESS", "COMPLETED", "CANCELLED"]
           }
         }
       },
       "EventParticipation": {
         "type": "object",
-        "required": [
-          "participationId",
-          "eventId",
-          "collectorId",
-          "role",
-          "status"
-        ],
+        "required": ["participationId", "eventId", "collectorId", "role", "status"],
         "properties": {
           "participationId": {
             "type": "string",
@@ -8330,13 +10407,7 @@
           },
           "status": {
             "type": "string",
-            "enum": [
-              "REGISTERED",
-              "WAITLIST",
-              "ATTENDED",
-              "NO_SHOW",
-              "CANCELLED"
-            ]
+            "enum": ["REGISTERED", "WAITLIST", "ATTENDED", "NO_SHOW", "CANCELLED"]
           },
           "createdAt": {
             "type": "string",
@@ -8367,13 +10438,7 @@
         "properties": {
           "status": {
             "type": "string",
-            "enum": [
-              "REGISTERED",
-              "WAITLIST",
-              "ATTENDED",
-              "NO_SHOW",
-              "CANCELLED"
-            ]
+            "enum": ["REGISTERED", "WAITLIST", "ATTENDED", "NO_SHOW", "CANCELLED"]
           }
         }
       },

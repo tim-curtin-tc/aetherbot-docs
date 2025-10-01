@@ -3,7 +3,7 @@ title: "Core: Collector Entity"
 slug: domain/entities/collector
 description: Enriched participant profile extending an Account with narrative, capability, and participation attributes in the aetherbot domain.
 status: experimental
-lastUpdated: 2025-09-24
+lastUpdated: 2025-09-30
 stability: experimental
 tags: [core-entity, participant, profile]
 ---
@@ -22,13 +22,13 @@ A **Collector** represents the in-domain participant persona linked (almost alwa
 | Participation State   | Tracks eligibility, disciplinary flags, achievement unlocks.                        |
 | Progression Wrapper   | References rank, skill metrics, mastery indicators decoupled from account security. |
 | Affiliation Surface   | Maintains current Academy memberships & Team associations.                          |
-| Aetherbot Stewardship | Indicates which Aetherbots a Collector actively manages operationally.                |
+| Aetherbot Stewardship | Indicates which Aetherbots a Collector actively manages operationally.              |
 
 ## 3. Identity & Referencing
 
 | Aspect            | Rule                                                                     |
 | ----------------- | ------------------------------------------------------------------------ |
-| Global Identifier | `collectorId` (UUID v7 / ULID).                                            |
+| Global Identifier | `collectorId` (UUID v7 / ULID).                                          |
 | Account Link      | Required `accountId` FK (1:1 enforced currently).                        |
 | Handle            | May mirror Account handle or be independently mutable (policy decision). |
 | Status            | `ACTIVE`, `RESTRICTED`, `BANNED`, `RETIRED`.                             |
@@ -40,6 +40,8 @@ A **Collector** represents the in-domain participant persona linked (almost alwa
 | ----------------- | ----------- | ---- | ----------------------------------------------------- |
 | collectorId       | ID          | 1    | PK.                                                   |
 | accountId         | ID(Account) | 1    | Unique index ensures 1:1.                             |
+| userName          | string      | 1    | Account username for login and @mentions.             |
+| name              | string      | 1    | Real name or preferred display name.                  |
 | displayName       | string      | 1    | User-facing; distinct from account handle if desired. |
 | biography         | richtext    | 0..1 | Sanitized markdown.                                   |
 | avatarUrl         | uri         | 0..1 | CDN host validation.                                  |
@@ -59,17 +61,17 @@ A **Collector** represents the in-domain participant persona linked (almost alwa
 
 ## 5. Relationship Topology
 
-| Related Entity    | Type         | Cardinality (from Collector) | Notes                                                   |
-| ----------------- | ------------ | -------------------------- | ------------------------------------------------------- |
-| Account           | Extends      | 1                          | Mandatory link.                                         |
-| Academy           | Member-of    | 0..N                       | Through membership relation (CollectorAcademyMembership). |
-| Team              | Participates | 0..N                       | Team membership pivot.                                  |
-| Aetherbot         | Operates     | 0..N                       | Operational assignment (not necessarily ownership).     |
-| AetherbotCard     | Uses         | 0..N                       | Usage telemetry linking for mastery.                    |
-| Tournament        | Competes     | 0..N                       | Via registration entries.                               |
-| IntegrityIncident | Subject      | 0..N                       | Disciplinary tracking.                                  |
-| Achievement       | Unlocks      | 0..N                       | If achievements modeled as entity.                      |
-| AuditLogEntry     | Emits        | 0..N                       | Status / privacy changes.                               |
+| Related Entity    | Type         | Cardinality (from Collector) | Notes                                                     |
+| ----------------- | ------------ | ---------------------------- | --------------------------------------------------------- |
+| Account           | Extends      | 1                            | Mandatory link.                                           |
+| Academy           | Member-of    | 0..N                         | Through membership relation (CollectorAcademyMembership). |
+| Team              | Participates | 0..N                         | Team membership pivot.                                    |
+| Aetherbot         | Operates     | 0..N                         | Operational assignment (not necessarily ownership).       |
+| AetherbotCard     | Uses         | 0..N                         | Usage telemetry linking for mastery.                      |
+| Tournament        | Competes     | 0..N                         | Via registration entries.                                 |
+| IntegrityIncident | Subject      | 0..N                         | Disciplinary tracking.                                    |
+| Achievement       | Unlocks      | 0..N                         | If achievements modeled as entity.                        |
+| AuditLogEntry     | Emits        | 0..N                         | Status / privacy changes.                                 |
 
 ## 6. Lifecycle & Status Rules
 
@@ -103,18 +105,34 @@ A **Collector** represents the in-domain participant persona linked (almost alwa
 POST   /card-collectors
 GET    /card-collectors/{collectorId}
 GET    /card-collectors?rank=...&privacyTier=...&status=...
+GET    /card-collectors/summary                          # Returns CardCollectorSummary[]
+GET    /card-collectors/summary/academy/{academyId}      # Filtered summaries by academy
 PATCH  /card-collectors/{collectorId}
 POST   /card-collectors/{collectorId}/restrict
 POST   /card-collectors/{collectorId}/ban
 POST   /card-collectors/{collectorId}/reinstate
 ```
 
+### CardCollectorSummary
+
+A lightweight representation used for list views and dashboards, containing:
+
+- `collectorId`: Unique identifier
+- `userName`: Login username
+- `name`: Display name or real name
+- `avatarImageUrl`: Profile image URL
+- `status`: Current status (ACTIVE, SUSPENDED, RETIRED)
+- `createdAt`: Timestamp of account creation
+- `academyId`: Associated academy identifier
+
+The summary endpoints optimize for performance by returning only essential fields needed for table views and collector selection interfaces.
+
 ## 10. Indexing & Query Patterns
 
 | Query                | Index                                                |
 | -------------------- | ---------------------------------------------------- |
 | Lookup by accountId  | Unique(accountId)                                    |
-| Filter by status     | (status, collectorId)                                  |
+| Filter by status     | (status, collectorId)                                |
 | Rank leaderboard     | (rank, masteryVector.metricX DESC) materialized view |
 | Privacy-gated search | (privacyTier, status)                                |
 
@@ -126,11 +144,11 @@ POST   /card-collectors/{collectorId}/reinstate
 
 ## 12. Open Questions
 
-| Area                 | Question                                                   |
-| -------------------- | ---------------------------------------------------------- |
+| Area                 | Question                                                     |
+| -------------------- | ------------------------------------------------------------ |
 | Multi-persona        | Allow multiple Collectors per Account later? Migration path? |
-| Rank recalculation   | Event-sourced vs scheduled batch?                          |
-| Achievement modeling | First-class entity vs embedded array?                      |
+| Rank recalculation   | Event-sourced vs scheduled batch?                            |
+| Achievement modeling | First-class entity vs embedded array?                        |
 
 ---
 
